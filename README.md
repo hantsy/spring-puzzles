@@ -1,2 +1,3 @@
 # spring-playground
-A playground to share tips, code samples, techniques or problem resovling in Spring web development.
+
+A playground to share tips, code samples, techniques, problem-resolving methods or cutting-edge features in Spring development.
