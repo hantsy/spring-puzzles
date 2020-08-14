@@ -10,6 +10,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.web.servlet.function.RouterFunction;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 
 import static org.springframework.web.servlet.function.RequestPredicates.GET;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
+import static org.springframework.web.servlet.function.ServerResponse.*;
 
 @SpringBootApplication
 @EnableJpaAuditing
@@ -40,8 +42,8 @@ public class DemoApplication {
     }
 
     @Bean
-    RouterFunction router(PostRepository posts) {
-        return route(GET("/"), req -> ServerResponse.ok().body(posts.findAll()));
+    RouterFunction<ServerResponse> router(PostRepository posts) {
+        return route(GET("/"), req -> ok().body(posts.findAll()));
     }
 
 
@@ -56,6 +58,7 @@ interface PostRepository extends JpaRepository<Post, Long> {
 @AllArgsConstructor
 @Builder
 @Table(name = "POSTS")
+@EntityListeners(AuditingEntityListener.class)
 class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "POSTS_SEQ")
