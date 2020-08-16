@@ -14,6 +14,7 @@ import static org.springframework.http.ResponseEntity.ok;
 @RequestMapping("orders")
 @RequiredArgsConstructor
 public class OrderController {
+
     private final OrderRepository orders;
 
     @GetMapping("")
