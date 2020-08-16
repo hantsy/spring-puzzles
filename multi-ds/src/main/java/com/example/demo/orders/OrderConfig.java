@@ -16,6 +16,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import javax.xml.crypto.Data;
 import java.util.HashMap;
 
 @Configuration
@@ -33,10 +34,10 @@ public class OrderConfig {
     @Orders
     DataSource ordersDataSource() {
         return DataSourceBuilder.create()
-                //.driverClassName(env.getProperty("app.datasources.orders.driverClassName"))
-                .url(env.getProperty("app.datasources.orders.url"))
-                .username(env.getProperty("app.datasources.orders.username"))
-                .password(env.getProperty("app.datasources.orders.password"))
+                //.driverClassName(env.getProperty("orders.datasource.driverClassName"))
+                .url(env.getProperty("orders.datasource.url"))
+                .username(env.getProperty("orders.datasource.username"))
+                .password(env.getProperty("orders.datasource.password"))
                 .type(HikariDataSource.class)
                 .build();
     }
@@ -47,12 +48,13 @@ public class OrderConfig {
         var em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(ordersDataSource());
         em.setPackagesToScan("com.example.demo.orders");
+        em.setPersistenceUnitName("orders");
 
         var vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", env.getProperty("hibernate.hbm2ddl.auto"));
-        properties.put("hibernate.dialect", env.getProperty("app.datasources.orders.hibernate.dialect"));
+        properties.put("hibernate.dialect", env.getProperty("orders.datasource.hibernate.dialect"));
         em.setJpaPropertyMap(properties);
 
         return em;

@@ -33,10 +33,10 @@ public class CustomerConfig {
     @Customers
     DataSource customersDataSource() {
         return DataSourceBuilder.create()
-               // .driverClassName(env.getProperty("app.datasources.customers.driverClassName"))
-                .url(env.getProperty("app.datasources.customers.url"))
-                .username(env.getProperty("app.datasources.customers.username"))
-                .password(env.getProperty("app.datasources.customers.password"))
+                // .driverClassName(env.getProperty("customers.datasource.driverClassName"))
+                .url(env.getProperty("customers.datasource.url"))
+                .username(env.getProperty("customers.datasource.username"))
+                .password(env.getProperty("customers.datasource.password"))
                 .type(HikariDataSource.class)
                 .build();
     }
@@ -47,13 +47,14 @@ public class CustomerConfig {
         var em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(customersDataSource());
         em.setPackagesToScan("com.example.demo.customers");
+        em.setPersistenceUnitName("customers");
 
         var vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", env.getProperty("hibernate.hbm2ddl.auto"));
-        properties.put("hibernate.dialect", env.getProperty("app.datasources.customers.hibernate.dialect"));
+        properties.put("hibernate.dialect", env.getProperty("customers.datasource.hibernate.dialect"));
         em.setJpaPropertyMap(properties);
 
         return em;
