@@ -9,16 +9,18 @@ services:
     ports:
       - "5432:5432"
     restart: always
+
+    # set max_prepared_transactions to support xa resource.
+    # else it will fail in the jta tx.
+    #
     command: 'postgres -c max_prepared_transactions=10'
     environment:
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: test
+      POSTGRES_DB: orders
       POSTGRES_USER: user
     volumes:
       - ./data/postgresql:/var/lib/postgresql
  #     - ./pg-initdb.d:/docker-entrypoint-initdb.d
-
-
 
   mysql:
     image: mysql:5.7
@@ -29,7 +31,7 @@ services:
       MYSQL_ROOT_PASSWORD: mysecret
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-      MYSQL_DATABASE: test
+      MYSQL_DATABASE: customers
     volumes:
       - ./data/mysql:/var/lib/mysql
  #     - ./mysql-initdb.d:/docker-entrypoint-initdb.d

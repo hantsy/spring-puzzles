@@ -27,14 +27,14 @@ class DemoApplicationTests {
 
     }
 
-	@Test
-	void testOrdersEndpoint() throws Exception {
-		mvc
-				.perform(
-						get("/orders").accept(MediaType.APPLICATION_JSON)
-				)
-				.andExpect(status().isOk());
+    @Test
+    void testOrdersEndpoint() throws Exception {
+        mvc
+                .perform(
+                        get("/orders").accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk());
 
-	}
+    }
 
 }

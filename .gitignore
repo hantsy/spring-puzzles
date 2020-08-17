@@ -1,5 +1,7 @@
 data
 oradata
+*.lock
+*.lck
 
 # Compiled class file
 *.class

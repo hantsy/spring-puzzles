@@ -1,8 +1,8 @@
 package com.example.demo.customers;
 
-import com.example.demo.Customers;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import java.util.HashMap;
 @PropertySource(value = "classpath:/customers.properties")
 @EnableJpaRepositories(
         basePackages = "com.example.demo.customers",
-        entityManagerFactoryRef = "customersEntityManager",
+        entityManagerFactoryRef = "customersEntityManagerFactory",
         transactionManagerRef = "customersTransactionManager"
 )
 public class CustomerConfig {
@@ -30,7 +30,7 @@ public class CustomerConfig {
     Environment env;
 
     @Bean
-    @Customers
+    @Qualifier("customersDataSource")
     DataSource customersDataSource() {
         return DataSourceBuilder.create()
                 // .driverClassName(env.getProperty("customers.datasource.driverClassName"))
@@ -42,10 +42,10 @@ public class CustomerConfig {
     }
 
     @Bean
-    @Customers
-    public LocalContainerEntityManagerFactoryBean customersEntityManager() {
+    @Qualifier("customersEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean customersEntityManagerFactory(@Qualifier("customersDataSource") DataSource customersDataSource) {
         var em = new LocalContainerEntityManagerFactoryBean();
-        em.setDataSource(customersDataSource());
+        em.setDataSource(customersDataSource);
         em.setPackagesToScan("com.example.demo.customers");
         em.setPersistenceUnitName("customers");
 
@@ -60,10 +60,12 @@ public class CustomerConfig {
         return em;
     }
 
-    @Customers
+    @Qualifier("customersTransactionManager")
     @Bean
-    public PlatformTransactionManager customersTransactionManager() {
-        var transactionManager = new JpaTransactionManager(customersEntityManager().getObject());
+    public PlatformTransactionManager customersTransactionManager(
+            @Qualifier("customersEntityManagerFactory")
+                    LocalContainerEntityManagerFactoryBean customersEntityManager) {
+        var transactionManager = new JpaTransactionManager(customersEntityManager.getObject());
         return transactionManager;
     }
 

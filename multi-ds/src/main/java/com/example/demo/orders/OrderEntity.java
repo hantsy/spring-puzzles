@@ -21,7 +21,7 @@ public class OrderEntity implements Serializable {
     private Long id;
 
     @AttributeOverride(name = "id", column = @Column(name = "cust_id"))
-    private CustomerId customerId;
+    private CustomerId customer;
 
     // use BigDecimal or Java Money API in the real world application.
     private Double amount;

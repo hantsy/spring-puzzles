@@ -37,7 +37,6 @@ public class DemoApplication {
                         var savedOrder = orders.save(OrderEntity.builder().customer(new CustomerId(savedCustomer.getId())).amount(1.2).build());
                         log.info("saved order: {}", savedOrder);
 
-                        log.info("transactionStatus: {}", transactionStatus);
                     }
             );
 
@@ -47,7 +46,7 @@ public class DemoApplication {
     @Bean
     PlatformTransactionManagerCustomizer<JtaTransactionManager> jtaTxManagerCustomizer() {
         return transactionManager -> {
-           log.info("tx: {}", transactionManager.getTransactionManager());
+            log.info("tx: {}", transactionManager.getTransactionManager());
         };
     }
 

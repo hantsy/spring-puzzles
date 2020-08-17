@@ -1,9 +1,8 @@
 package com.example.demo.orders;
 
-import com.example.demo.Orders;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,22 +15,22 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
 import java.util.HashMap;
 
 @Configuration
 @PropertySource(value = "classpath:/orders.properties")
 @EnableJpaRepositories(
         basePackages = "com.example.demo.orders",
-        entityManagerFactoryRef = "ordersEntityManager",
+        entityManagerFactoryRef = "ordersEntityManagerFactory",
         transactionManagerRef = "ordersTransactionManager"
 )
 public class OrderConfig {
+    
     @Autowired
     Environment env;
 
     @Bean
-    @Orders
+    @Qualifier("ordersDataSource")
     DataSource ordersDataSource() {
         return DataSourceBuilder.create()
                 //.driverClassName(env.getProperty("orders.datasource.driverClassName"))
@@ -43,8 +42,8 @@ public class OrderConfig {
     }
 
     @Bean
-    @Orders
-    public LocalContainerEntityManagerFactoryBean ordersEntityManager() {
+    @Qualifier("ordersEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean ordersEntityManagerFactory(@Qualifier("ordersDataSource") DataSource ordersDataSource) {
         var em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(ordersDataSource());
         em.setPackagesToScan("com.example.demo.orders");
@@ -60,10 +59,12 @@ public class OrderConfig {
         return em;
     }
 
-    @Orders
     @Bean
-    public PlatformTransactionManager ordersTransactionManager() {
-        var transactionManager = new JpaTransactionManager(ordersEntityManager().getObject());
+    @Qualifier("ordersTransactionManager")
+    public PlatformTransactionManager ordersTransactionManager(
+            @Qualifier("ordersEntityManagerFactory")
+                    LocalContainerEntityManagerFactoryBean ordersEntityManager) {
+        var transactionManager = new JpaTransactionManager(ordersEntityManager.getObject());
         return transactionManager;
     }
 

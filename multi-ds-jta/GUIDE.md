@@ -1,0 +1,2 @@
+* [A Guide to Atomikos](https://www.baeldung.com/java-atomikos)
+* [[Configuring PostgreSQL for XA](https://www.atomikos.com/Documentation/ConfiguringPostgreSQL)](https://www.atomikos.com/Documentation/ConfiguringPostgreSQL)

@@ -15,8 +15,7 @@ import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfigu
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-@SpringBootApplication
-@EnableAutoConfiguration(exclude = {
+@SpringBootApplication(exclude = {
         DataSourceAutoConfiguration.class,
         JpaRepositoriesAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class,
@@ -35,7 +34,7 @@ public class DemoApplication {
             var savedCustomer = customers.save(CustomerEntity.builder().firstName("Hantsy").lastName("Bai").build());
             log.info("saved customer: {}", savedCustomer);
 
-            var savedOrder = orders.save(OrderEntity.builder().customerId(new CustomerId(savedCustomer.getId())).amount(1.2).build());
+            var savedOrder = orders.save(OrderEntity.builder().customer(new CustomerId(savedCustomer.getId())).amount(1.2).build());
             log.info("saved order: {}", savedOrder);
         };
     }

@@ -6,3 +6,4 @@
 * [Multitenancy: Switching Databases at runtime with Spring](https://grobmeier.solutions/spring-multitenancy-switch-database-at-runtime.html)
 * [Spring JPA – Multiple Databases](https://www.baeldung.com/spring-data-jpa-multiple-databases)
 
+* [snicoll/demo-multi-entity-managers](https://github.com/snicoll/demo-multi-entity-managers)

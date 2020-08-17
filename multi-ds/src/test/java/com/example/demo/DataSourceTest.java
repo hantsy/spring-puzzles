@@ -5,6 +5,7 @@ import com.example.demo.orders.OrderConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -17,11 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DataSourceTest {
 
     @Autowired
-    @Customers
+    @Qualifier("customersDataSource")
     private DataSource custDataSource;
 
     @Autowired
-    @Orders
+    @Qualifier("ordersDataSource")
     private DataSource ordersDataSource;
 
     @Test

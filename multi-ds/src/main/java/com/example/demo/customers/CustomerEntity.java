@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "orders")
+@Table(name = "customers")
 @Data
 @Builder
 @NoArgsConstructor
