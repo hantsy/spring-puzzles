@@ -88,4 +88,5 @@ tenant2=# select * from customers;
 * [Providing Multitenancy with Spring Boot](https://bytefish.de/blog/spring_boot_multitenancy/)
 * [Extend Spring Security to Protect Multi-tenant SaaS Applications](https://www.developer.com/java/ent/extend-spring-security-to-protect-multi-tenant-saas-applications.html)
 * [Extending Spring Security OAuth for Multi-Tenant](https://www.jamasoftware.com/blog/spring-security-oauth-multi-tenant/)
-
+* [A Guide to Multitenancy in Hibernate 5](https://www.baeldung.com/hibernate-5-multitenancy)
+* [Multitenancy Applications with Spring Boot and Flyway](https://reflectoring.io/flyway-spring-boot-multitenancy/)
