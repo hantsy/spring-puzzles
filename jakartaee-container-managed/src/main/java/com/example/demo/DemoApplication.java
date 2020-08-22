@@ -1,6 +1,9 @@
 package com.example.demo;
 
-import lombok.*;
+import com.example.demo.ejb.EjbPostRepository;
+import com.example.demo.model.Post;
+import com.example.demo.repository.PostRepository;
+import com.example.demo.repository.SimplePostRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -9,22 +12,20 @@ import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfig
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jndi.JndiObjectFactoryBean;
 import org.springframework.orm.jpa.SharedEntityManagerCreator;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
+import javax.ejb.Stateless;
 import javax.naming.NamingException;
-import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
+import static org.springframework.context.annotation.ComponentScan.Filter;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 import static org.springframework.web.servlet.function.ServerResponse.ok;
 
@@ -35,6 +36,11 @@ import static org.springframework.web.servlet.function.ServerResponse.ok;
 })
 @EnableJpaRepositories(entityManagerFactoryRef = "entityManagerFactory")
 @EnableJpaAuditing
+@ComponentScan(
+        excludeFilters = {
+                @Filter(classes = Stateless.class)
+        }
+)
 @Slf4j
 public class DemoApplication {
 
@@ -53,19 +59,24 @@ public class DemoApplication {
     }
 
     @Bean
-    RouterFunction<ServerResponse> router(PostRepository posts, SimplePostRepository simplePosts) {
+    RouterFunction<ServerResponse> router(
+            PostRepository posts,
+            SimplePostRepository simplePosts,
+            EjbPostRepository ejbPostRepository
+    ) {
         return route()
                 .GET("/", req -> ok().body(posts.findAll()))
                 .GET("/simple", req -> ok().body(simplePosts.findAll()))
+                .GET("/ejb", req -> ok().body(ejbPostRepository.findAll()))
                 .build();
     }
 
     @Bean
     public EntityManagerFactory entityManagerFactory() throws NamingException {
-        JndiObjectFactoryBean ds = new JndiObjectFactoryBean();
-        ds.setJndiName("java:jboss/jpa/BlogPU");
-        ds.afterPropertiesSet();
-        return (EntityManagerFactory) ds.getObject();
+        JndiObjectFactoryBean emf = new JndiObjectFactoryBean();
+        emf.setJndiName("java:jboss/jpa/BlogPU");
+        emf.afterPropertiesSet();
+        return (EntityManagerFactory) emf.getObject();
     }
 
     @Bean
@@ -73,43 +84,12 @@ public class DemoApplication {
         return SharedEntityManagerCreator.createSharedEntityManager(entityManagerFactory);
     }
 
-}
-
-@Component
-@RequiredArgsConstructor
-class SimplePostRepository {
-
-    private final EntityManager entityManager;
-
-    List<Post> findAll() {
-        var cb = this.entityManager.getCriteriaBuilder();
-        var query = cb.createQuery(Post.class);
-        var root = query.from(Post.class);
-
-        return this.entityManager.createQuery(query).getResultList();
+    @Bean
+    public EjbPostRepository ejbPostRepository() throws NamingException {
+        JndiObjectFactoryBean ejb = new JndiObjectFactoryBean();
+        ejb.setJndiName("java:module/EjbPostRepositoryBean!com.example.demo.ejb.EjbPostRepository");
+        ejb.afterPropertiesSet();
+        return (EjbPostRepository) ejb.getObject();
     }
-
 }
 
-interface PostRepository extends JpaRepository<Post, Long> {
-}
-
-@Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Table(name = "POSTS")
-@EntityListeners(AuditingEntityListener.class)
-class Post {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-
-    private String title;
-
-    private String body;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
-}
