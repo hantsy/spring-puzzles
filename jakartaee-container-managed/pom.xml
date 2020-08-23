@@ -70,7 +70,7 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- excludes all Jakarta EE related deps which are managed Wildfly/JBoss Modules -->
+        <!-- excludes all Jakarta EE related deps which are managed by Wildfly/JBoss Modules -->
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
