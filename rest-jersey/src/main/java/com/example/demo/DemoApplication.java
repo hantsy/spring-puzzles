@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -40,7 +41,13 @@ public class DemoApplication {
     ResourceConfigCustomizer jerseyConfigCustomizer() {
         return config -> {
             log.info("jersey config: {}", config);
+            config.register(PostResource.class);
         };
+    }
+
+    @Bean
+    public ResourceConfig jerseyConfig() {
+        return new ResourceConfig();
     }
 
 }
