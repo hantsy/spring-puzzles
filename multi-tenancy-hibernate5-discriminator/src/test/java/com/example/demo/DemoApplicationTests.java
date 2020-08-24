@@ -35,10 +35,10 @@ class DemoApplicationTests {
                 .perform(
                         get("/customers")
                                 .accept(MediaType.APPLICATION_JSON)
-                                .header("X-TenantId", "tenant1")
+                                .header("X-TenantId", "t1")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].firstName", containsString("@tenant1")));
+                .andExpect(jsonPath("$[0].firstName", containsString("@t1")));
 
     }
 
@@ -48,10 +48,10 @@ class DemoApplicationTests {
                 .perform(
                         get("/customers")
                                 .accept(MediaType.APPLICATION_JSON)
-                                .header("X-TenantId", "tenant2")
+                                .header("X-TenantId", "t2")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].firstName", containsString("@tenant2")));
+                .andExpect(jsonPath("$[0].firstName", containsString("@t2")));
 
     }
 

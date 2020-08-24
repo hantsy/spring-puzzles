@@ -56,4 +56,4 @@ tenant=#
 * [spring-framework/issues/25125#Allow customization of JPA EntityManager before use](https://github.com/spring-projects/spring-framework/issues/25125#) 
 
 * [spring-framework/issues/21061#Add way to enable Session filter for Hibernate 5+ [SPR-16518\]](https://github.com/spring-projects/spring-framework/issues/21061#)  
-
+* [Introduce EntityManager initialization callbacks ](https://github.com/kenny5he/spring-framework/commit/6860eda32bbe163a9af8b550798bc5cf48b38d3c)
