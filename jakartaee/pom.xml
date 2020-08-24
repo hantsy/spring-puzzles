@@ -57,6 +57,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.messaginghub</groupId>
+            <artifactId>pooled-jms</artifactId>
+        </dependency>
 
         <!-- excludes tomcat at runtime -->
         <dependency>
@@ -149,6 +161,10 @@
                 <artifactId>wildfly-maven-plugin</artifactId>
                 <version>${wildfly-maven-plugin.version}</version>
                 <configuration>
+                    <server-config>standalone-full.xml</server-config>
+                    <scripts>
+                        <script>config.cli</script>
+                    </scripts>
                     <!-- if a wildfly.home property is not present, firstly it will download
                         a copy of wildfly distribution automatically -->
                     <!-- also fetch from jbossHome -->

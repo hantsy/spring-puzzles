@@ -33,6 +33,10 @@ tenant=# select * from customers;
 
 tenant=#
 
+17:05:50,893 INFO  [stdout] (ServerService Thread Pool -- 10) 2020-08-24 17:05:50.890  INFO 15516 --- [read Pool -- 10] com.example.demo.DemoApplication         : sending an email: Hel
+lo, Spring
+17:05:50,906 INFO  [stdout] (DefaultMessageListenerContainer-1) 2020-08-24 17:05:50.905  INFO 15516 --- [enerContainer-1] com.example.demo.GreetingReceiver        : received greeting m
+essage: Hello, Spring
 
 
 ## Reference
