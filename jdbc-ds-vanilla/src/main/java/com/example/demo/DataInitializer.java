@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.example.demo.jpa.DataJpaPostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;

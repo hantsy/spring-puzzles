@@ -1,5 +1,6 @@
-package com.example.demo;
+package com.example.demo.jdbc;
 
+import com.example.demo.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;

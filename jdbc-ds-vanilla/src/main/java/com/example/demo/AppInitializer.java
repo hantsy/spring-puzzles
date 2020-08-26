@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.jdbc.JdbcConfig;
+import com.example.demo.jpa.JpaConfig;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.ServletRegistration;
@@ -12,6 +14,7 @@ public class AppInitializer extends AbstractAnnotationConfigDispatcherServletIni
 				AppConfig.class,//
 				DataSourceConfig.class,
 				JpaConfig.class, //
+				JdbcConfig.class,//
 				Jackson2ObjectMapperConfig.class
 		};
 	}

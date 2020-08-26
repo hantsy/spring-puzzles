@@ -17,20 +17,28 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "POSTS")
 @EntityListeners(AuditingEntityListener.class)
-class Post {
+
+// for data jdbc
+@org.springframework.data.relational.core.mapping.Table("POSTS")
+public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "POSTS_SEQ")
     @SequenceGenerator(sequenceName = "POSTS_SEQ", allocationSize = 1, name = "POSTS_SEQ")
     @Column(name = "ID")
+
+    @org.springframework.data.relational.core.mapping.Column("ID")
     private Long id;
 
     @Column(name = "TITLE")
+    @org.springframework.data.relational.core.mapping.Column("TITLE")
     private String title;
 
     @Column(name = "BODY")
+    @org.springframework.data.relational.core.mapping.Column("BODY")
     private String body;
 
     @Column(name = "CREATED_AT")
+    @org.springframework.data.relational.core.mapping.Column("CREATED_AT")
     @CreatedDate
     private LocalDateTime createdAt;
 }

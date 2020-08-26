@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.example.demo.jpa;
 
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -18,7 +18,7 @@ import java.util.Properties;
 
 
 @EnableJpaAuditing
-@EnableJpaRepositories
+@EnableJpaRepositories(transactionManagerRef = "jpaTransactionManager")
 @EnableTransactionManagement(proxyTargetClass = true)
 @Configuration
 public class JpaConfig {
@@ -56,7 +56,7 @@ public class JpaConfig {
     }
 
     @Bean
-    public PlatformTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
+    public PlatformTransactionManager jpaTransactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
         return new JpaTransactionManager(entityManagerFactoryBean.getObject());
     }
 

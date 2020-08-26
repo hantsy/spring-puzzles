@@ -1,10 +1,13 @@
 package com.example.demo;
 
+import com.example.demo.jdbc.DataJdbcPostRepository;
+import com.example.demo.jdbc.JdbcPostRepository;
+import com.example.demo.jpa.DataJpaPostRepository;
+import com.example.demo.jpa.JpaPostRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
