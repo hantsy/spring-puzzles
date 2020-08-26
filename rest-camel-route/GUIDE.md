@@ -7,3 +7,13 @@ C:\Users\hantsy>curl http://localhost:8080/api/posts
 C:\Users\hantsy>curl http://localhost:8080/api/posts
 [{"id":26,"title":"Configure Oracle DataSource in Apache Tomcat 9","body":"test content","createdAt":{"nano":2647000,"year":2020,"monthValue":8,"dayOfMonth":25,"hour":17,"minute":48,"second":6,"dayOfWeek":"TUESDAY","dayOfYear":238,"month":"AUGUST","chronology":{"id":"ISO","calendarType":"iso8601"}}}]
 C:\Users\hantsy>
+
+
+
+## Reference
+
+* [Creating a REST service with Apache Camel ](https://tomd.xyz/camel-rest/)
+* [ Apache Camel with Spring Boot](https://www.javadevjournal.com/spring-boot/apache-camel-spring-boot/)
+* [Apache Camel Spring Boot starters](https://camel.apache.org/camel-spring-boot/latest/)
+* [Switch Off the Spring MVC DispatcherServlet](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#howto-switch-off-the-spring-mvc-dispatcherservlet)
+

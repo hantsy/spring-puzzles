@@ -14,7 +14,7 @@ class DemoApplicationIT {
     @Test
     @DisplayName(" GET '/' should return status 200")
     void getAllPosts() {
-        var resEntity = restTemplate.getForEntity("http://localhost:8080/posts", Post[].class);
+        var resEntity = restTemplate.getForEntity("http://localhost:8080/api/posts", Post[].class);
         assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         var posts = resEntity.getBody();
