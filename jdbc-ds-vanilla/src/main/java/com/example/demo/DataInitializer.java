@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class DataInitializer implements ApplicationListener<ContextRefreshedEvent> {
-    private final PostRepository posts;
+    private final DataJpaPostRepository posts;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {

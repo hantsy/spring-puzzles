@@ -21,12 +21,16 @@ class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "POSTS_SEQ")
     @SequenceGenerator(sequenceName = "POSTS_SEQ", allocationSize = 1, name = "POSTS_SEQ")
+    @Column(name = "ID")
     private Long id;
 
+    @Column(name = "TITLE")
     private String title;
 
+    @Column(name = "BODY")
     private String body;
 
+    @Column(name = "CREATED_AT")
     @CreatedDate
     private LocalDateTime createdAt;
 }

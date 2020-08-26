@@ -57,3 +57,14 @@ public DataSource jndiDataSource() throws NamingException {
 
 
 
+```bash
+curl http://localhost:8080/demo/
+[{"id":2,"title":"Configure Oracle DataSource in Apache Tomcat 9","body":"test content","createdAt":"2020-08-26T21:53:12.8037"}]
+C:\Users\hantsy>curl http://localhost:8080/demo/jdbc
+[{"id":2,"title":"Configure Oracle DataSource in Apache Tomcat 9","body":"test content","createdAt":"2020-08-26T21:53:12.8037"}]
+C:\Users\hantsy>curl http://localhost:8080/demo/datajdbc
+[{"id":2,"title":"Configure Oracle DataSource in Apache Tomcat 9","body":"test content","createdAt":"2020-08-26T21:53:12.8037"}]
+C:\Users\hantsy>curl http://localhost:8080/demo/jpa
+[{"id":2,"title":"Configure Oracle DataSource in Apache Tomcat 9","body":"test content","createdAt":"2020-08-26T21:53:12.8037"}]
+```
+
