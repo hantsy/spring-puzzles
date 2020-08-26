@@ -26,6 +26,8 @@ public class Post {
     @SequenceGenerator(sequenceName = "POSTS_SEQ", allocationSize = 1, name = "POSTS_SEQ")
     @Column(name = "ID")
 
+    // for data jdbc
+    @org.springframework.data.annotation.Id
     @org.springframework.data.relational.core.mapping.Column("ID")
     private Long id;
 
