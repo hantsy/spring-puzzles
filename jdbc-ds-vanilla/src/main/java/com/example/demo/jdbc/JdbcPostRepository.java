@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,9 @@ public class JdbcPostRepository {
                         .id(rs.getLong("ID"))
                         .title(rs.getString("TITLE"))
                         .body(rs.getString("BODY"))
-                        .createdAt(rs.getTimestamp("CREATED_AT").toLocalDateTime())
+                        //.createdAt(rs.getTimestamp("CREATED_AT").toLocalDateTime())
+                        // h2, mysql and postgres JDBC drivers have supported Java 8 DateTime.
+                        .createdAt(rs.getObject("CREATED_AT", LocalDateTime.class))
                         .build()
         );
     }
