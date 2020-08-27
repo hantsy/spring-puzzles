@@ -12,7 +12,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableJdbcRepositories(basePackages = "com.example.demo.jdbc")
+@EnableJdbcRepositories
 public class JdbcConfig extends AbstractJdbcConfiguration {
 
     @Bean
