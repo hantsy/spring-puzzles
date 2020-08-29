@@ -21,7 +21,7 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
 
     @Bean
     JdbcTemplate jdbcTemplate(DataSource dataSource) {
-       return new JdbcTemplate(dataSource);
+        return new JdbcTemplate(dataSource);
     }
 
     @Bean
@@ -32,7 +32,7 @@ public class JdbcConfig extends AbstractJdbcConfiguration {
     @Override
     @Bean
     public JdbcMappingContext jdbcMappingContext(Optional<NamingStrategy> namingStrategy, JdbcCustomConversions customConversions) {
-        var mappingContext= super.jdbcMappingContext(namingStrategy, customConversions);
+        var mappingContext = super.jdbcMappingContext(namingStrategy, customConversions);
         mappingContext.setForceQuote(false);
         return mappingContext;
     }
