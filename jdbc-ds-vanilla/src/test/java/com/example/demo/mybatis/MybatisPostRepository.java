@@ -14,7 +14,7 @@ public class MybatisPostRepository {
 
     public List<Post> findAll() {
        return  this.template.<Post>selectList(
-                "com.example.demo.mybatis.mapper.PostMapper.findAll"// terrible literal statement.
+                "com.example.demo.mybatis.mapper.PostMapper.findAll"// terrible literal *statement*, it is not sql, not type safe apis.
         );
     }
 }

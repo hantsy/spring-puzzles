@@ -2,6 +2,7 @@ package com.example.demo.mybatis;
 
 import com.example.demo.DataSourceConfig;
 import com.example.demo.Post;
+import com.example.demo.mybatis.mapper.PostMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ public class MybatisTest {
     @Autowired
     MybatisJdbcPostRepository postsRepository;
 
+    @Autowired
+    PostMapper mapper;
+
     @BeforeEach()
     public void setup() {
     }
@@ -60,6 +64,25 @@ public class MybatisTest {
         assertThat(result.size()).isEqualTo(1);
         log.info("result.get(0).getTitle(): {}", result.get(0).getTitle());
         log.info("result.get(0).getBody(): {}", result.get(0).getBody());
+        assertThat(result.get(0).getTitle()).isNotNull();
+    }
+
+    @Test
+    public void testFindAllWithMapper() {
+        var result = mapper.findAll();
+        result.forEach(post -> log.info("result: {}", result));
+        assertThat(result.size()).isEqualTo(1);
+        log.info("result.get(0).getTitle(): {}", result.get(0).getTitle());
+        log.info("result.get(0).getBody(): {}", result.get(0).getBody());
+        assertThat(result.get(0).getTitle()).isNotNull();
+    }
+
+    @Test
+    public void testFindAllSummariesWithMapper() {
+        var result = mapper.findSummaries();
+        result.forEach(post -> log.info("result: {}", result));
+        assertThat(result.size()).isEqualTo(1);
+        log.info("result.get(0).getTitle(): {}", result.get(0).getTitle());
         assertThat(result.get(0).getTitle()).isNotNull();
     }
 }
