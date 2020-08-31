@@ -2,7 +2,10 @@ package com.example.demo;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -142,7 +145,7 @@ public class DemoApplication {
 @Slf4j
 class SignupHandler {
 
-    @RabbitListener(id="signup",  queues = DemoApplication.QUEUE_NAME)
+    @RabbitListener(id = "signup", queues = DemoApplication.QUEUE_NAME)
     public SignupResult handle(SignupRequest request) {
         var fullName = request.getFullName();
         var phone = request.getPhone();
