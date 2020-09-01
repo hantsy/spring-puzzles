@@ -1,11 +1,10 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.apache.tomcat.jni.Local;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -14,61 +13,150 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
-import static org.springframework.web.servlet.function.RequestPredicates.POST;
+import java.time.LocalDateTime;
+
 import static org.springframework.web.servlet.function.RouterFunctions.route;
+import static org.springframework.web.servlet.function.ServerResponse.accepted;
 import static org.springframework.web.servlet.function.ServerResponse.ok;
 
 @SpringBootApplication
+@Slf4j
 public class DemoApplication {
-    public static final String ROUTING_PATTERN = "barry.q.#";
-    public static final String ROUTING_KEY = "barry.q.signups";
-    public static final String TOPIC_EXCHANGE_NAME = "barry";
-    public static final String QUEUE_NAME = "signups";
+    public static final String DIRECT_EXCHANGE_PINGPONG = "pingpong";
+    public static final String QUEUE_PINGPONG = "pingpong";
+    public static final String ROUTING_KEY_PINGPONG = "r.pingpong";
+
+    @Bean
+    Queue queuePingpong() {
+        return new Queue(QUEUE_PINGPONG, false);
+    }
+
+    @Bean
+    DirectExchange exchangePingpong() {
+        return new DirectExchange(DIRECT_EXCHANGE_PINGPONG);
+    }
+
+    @Bean
+    Binding bindingPingpong(Queue queuePingpong, DirectExchange exchangePingpong) {
+        return BindingBuilder.bind(queuePingpong).to(exchangePingpong).with(ROUTING_KEY_PINGPONG);
+    }
+
+    //
+    public static final String ROUTING_PATTERN = "greeting.#";
+    public static final String ROUTING_KEY_WELCOME = "greeting.welcome";
+    public static final String ROUTING_KEY_HELLO = "greeting.hello";
+    public static final String TOPIC_EXCHANGE_GREETING = "greeting";
+    public static final String QUEUE_HELLO = "greeting-hello";
+    public static final String QUEUE_WELCOME = "greeting-welcome";
+    public static final String QUEUE_GREETING = "all-greetings";
 
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
     }
 
     @Bean
-    Queue queue() {
-        return new Queue(QUEUE_NAME, false);
+    Queue queueGreeting() {
+        return new Queue(QUEUE_GREETING, false);
+    }
+
+    @Bean
+    Queue queueWelcome() {
+        return new Queue(QUEUE_WELCOME, false);
+    }
+
+    @Bean
+    Queue queueHello() {
+        return new Queue(QUEUE_HELLO, false);
     }
 
     @Bean
     TopicExchange exchange() {
-        return new TopicExchange(TOPIC_EXCHANGE_NAME);
+        return new TopicExchange(TOPIC_EXCHANGE_GREETING);
     }
 
     @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_PATTERN);
+    Binding bindingGreetingWelcome(Queue queueWelcome, TopicExchange exchange) {
+        return BindingBuilder.bind(queueWelcome).to(exchange).with(ROUTING_KEY_WELCOME);
     }
+
+    @Bean
+    Binding bindingGreetingHello(Queue queueHello, TopicExchange exchange) {
+        return BindingBuilder.bind(queueHello).to(exchange).with(ROUTING_KEY_HELLO);
+    }
+
+    @Bean
+    Binding bindingAllGreetings(Queue queueGreeting, TopicExchange exchange) {
+        return BindingBuilder.bind(queueGreeting).to(exchange).with(ROUTING_PATTERN);
+    }
+
+    public static final String QUEUE_LOGGER = "logger";
+    public static final String EXCHANGE_LOGGER = "logger";
+
+    @Bean
+    Queue queueLogger() {
+        return new Queue(QUEUE_LOGGER, false);
+    }
+
+    @Bean
+    FanoutExchange exchangeLogger() {
+        return new FanoutExchange(EXCHANGE_LOGGER);
+    }
+
+    @Bean
+    Binding bindingLogger(Queue queueLogger, FanoutExchange exchangeLogger) {
+        return BindingBuilder.bind(queueLogger).to(exchangeLogger);
+    }
+
 
     //MessageConverter from spring-messaging module does not work with AmqpTemplate/RabbitTemplate.
     //Make sure it is org.springframework.amqp.support.converter.MessageConverter
     @Bean
-    MessageConverter jacksonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    MessageConverter jacksonMessageConverter(ObjectMapper objectMapper) {
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     @Bean
     RouterFunction<ServerResponse> router(RabbitTemplate rabbitTemplate) {
-        return route(
-                POST("/"),
-                req -> ok()
-                        .body(
-                                rabbitTemplate.convertSendAndReceiveAsType(
-                                        TOPIC_EXCHANGE_NAME,
-                                        ROUTING_KEY,
-                                        req.body(SignupRequest.class),
-                                        ParameterizedTypeReference.forType(SignupResult.class)
-                                )
-                        )
-        );
+        return route()
+                .GET("/ping",
+                        req -> {
+                            String result = rabbitTemplate.convertSendAndReceiveAsType(
+                                    DIRECT_EXCHANGE_PINGPONG,
+                                    ROUTING_KEY_PINGPONG,
+                                    "ping",
+                                    ParameterizedTypeReference.forType(String.class)
+                            );
+                            log.info("response from '/ping': {}", result);
+                            return ok().body(result);
+                        }
+                )
+                .POST("/welcome",
+                        req -> {
+                            rabbitTemplate.convertAndSend(
+                                    TOPIC_EXCHANGE_GREETING,
+                                    ROUTING_KEY_WELCOME,
+                                    req.body(GreetingRequest.class)
+                            );
+                            return accepted().build();
+                        }
+
+                )
+                .POST("/hello",
+                        req -> {
+                            rabbitTemplate.convertAndSend(
+                                    TOPIC_EXCHANGE_GREETING,
+                                    ROUTING_KEY_HELLO,
+                                    req.body(GreetingRequest.class)
+                            );
+                            return accepted().build();
+                        }
+                )
+                .build();
     }
 
 
@@ -140,27 +228,58 @@ public class DemoApplication {
 
 }
 
+
 @Component
-@RequiredArgsConstructor
 @Slf4j
-class SignupHandler {
+class PingpongHandler {
+    @RabbitListener(id = "pingpong", queues = DemoApplication.QUEUE_PINGPONG)
+    public String ping(String request) {
+        log.info("Received request: in : {}", request, this.getClass().getName());
+        return "pong";
+    }
+}
 
-    @RabbitListener(id = "signup", queues = DemoApplication.QUEUE_NAME)
-    public SignupResult handle(SignupRequest request) {
-        var fullName = request.getFullName();
-        var phone = request.getPhone();
-        var names = fullName.split("\\s");
-        var firstName = names[0];
-        var lastName = names[1] == null ? "" : names[1];
-        var formattedPhone = "+33" + phone.replaceAll("\\s", "");
+@Component
+@Slf4j
+class GreetingHandler {
 
-        log.info("User {} {} with phone {} has just signed up!", firstName, lastName, formattedPhone);
+    @RabbitListener(id = "greeting", queues = DemoApplication.QUEUE_GREETING)
+    public void handle(GreetingRequest request) {
+        log.info("Received greeting request: {} in {}", request, this.getClass().getName());
+    }
 
-        return SignupResult.builder()
-                .firstName(firstName)
-                .lastName(lastName)
-                .phone(formattedPhone)
+}
+
+@Component
+@Slf4j
+class WelcomeHandler {
+    @RabbitListener(id = "welcome", queues = DemoApplication.QUEUE_WELCOME)
+    public void welcome(GreetingRequest request) {
+        log.info("Received greeting request: {} in {}", request, this.getClass().getName());
+
+    }
+}
+
+@Component
+@Slf4j
+class HelloHandler {
+    @RabbitListener(id = "hello", queues = DemoApplication.QUEUE_HELLO)
+    @SendTo("logger")
+    public GreetingResult hello(GreetingRequest request) {
+        log.info("Received greeting request: {} in {}", request, this.getClass().getName());
+        return GreetingResult.builder()
+                .message("Hello, "+ request.getName())
+                .createdAt(LocalDateTime.now())
                 .build();
+    }
+}
+
+@Component
+@Slf4j
+class LoggerHandler {
+    @RabbitListener(id = "logger", queues = DemoApplication.QUEUE_LOGGER)
+    public void welcome(GreetingResult request) {
+        log.info("Received request: {} in {}", request, this.getClass().getName());
     }
 }
 
@@ -168,17 +287,15 @@ class SignupHandler {
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-class SignupRequest {
-    String fullName;
-    String phone;
+class GreetingRequest {
+    String name;
 }
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-class SignupResult {
-    String firstName;
-    String lastName;
-    String phone;
+class GreetingResult {
+    String message;
+    LocalDateTime createdAt;
 }

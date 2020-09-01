@@ -7,15 +7,13 @@ import org.springframework.amqp.rabbit.test.RabbitListenerTestHarness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.core.ParameterizedTypeReference;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
-public class SignupHandlerTest {
+public class GreetingHandlerTest {
 
     @Autowired
     private RabbitListenerTestHarness harness;
@@ -25,25 +23,27 @@ public class SignupHandlerTest {
 
     @Test
     public void testTwoWay() throws Exception {
-        SignupRequest signupRequest= SignupRequest.builder().fullName("John Doe").phone("5 46 31 71 71").build();
-        SignupResult result =this.rabbitTemplate.convertSendAndReceiveAsType(
-               DemoApplication.TOPIC_EXCHANGE_NAME,
-               DemoApplication.ROUTING_KEY,
-               signupRequest,
-               ParameterizedTypeReference.forType(SignupResult.class)
-       );
-        assertThat(result.getFirstName()).isEqualTo("John");
-        assertThat(result.getLastName()).isEqualTo("Doe");
-        assertThat(result.getPhone()).isEqualTo("+33546317171");
+        GreetingRequest signupRequest = GreetingRequest.builder().name("Hantsy").build();
+        this.rabbitTemplate.convertAndSend(
+                DemoApplication.TOPIC_EXCHANGE_GREETING,
+                DemoApplication.ROUTING_KEY_WELCOME,
+                signupRequest
+        );
 
-        SignupHandler listener = this.harness.getSpy("signup");
+        Thread.sleep(1000);
+
+        WelcomeHandler listener = this.harness.getSpy("welcome");
         assertNotNull(listener);
-        verify(listener).handle(any(SignupRequest.class));
+        verify(listener).welcome(any(GreetingRequest.class));
+
+        GreetingHandler greetingHandler = this.harness.getSpy("greeting");
+        assertNotNull(greetingHandler);
+        verify(greetingHandler).handle(any(GreetingRequest.class));
     }
 
     @TestConfiguration
     @RabbitListenerTest
-    static class TestConfig{
+    static class TestConfig {
 
     }
 }

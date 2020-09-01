@@ -12,16 +12,27 @@ class DemoApplicationIT {
     TestRestTemplate restTemplate = new TestRestTemplate();
 
     @Test
-    @DisplayName(" POST '/' should return status 200")
-    void getAllPosts() {
-        var requestBody= SignupRequest.builder().fullName("John Doe").phone("5 46 31 71 71").build();
-        var resEntity = restTemplate.postForEntity("http://localhost:8080/", requestBody, SignupResult.class);
-        assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    @DisplayName(" POST '/welcome' should return status 202")
+    void welcome() {
+        GreetingRequest requestBody = GreetingRequest.builder().name("Hantsy").build();
+        var resEntity = restTemplate.postForEntity("http://localhost:8080/welcome", requestBody, GreetingResult.class);
+        assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+    }
 
-        var result = resEntity.getBody();
-        assertThat(result.getFirstName()).isEqualTo("John");
-        assertThat(result.getLastName()).isEqualTo("Doe");
-        assertThat(result.getPhone()).isEqualTo("+33546317171");
+    @Test
+    @DisplayName(" POST '/hello' should return status 202")
+    void hello() {
+        GreetingRequest requestBody = GreetingRequest.builder().name("Hantsy").build();
+        var resEntity = restTemplate.postForEntity("http://localhost:8080/hello", requestBody, GreetingResult.class);
+        assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+    }
+
+    @Test
+    @DisplayName(" GET '/ping' should return status 202")
+    void ping() {
+        var resEntity = restTemplate.getForEntity("http://localhost:8080/ping", String.class);
+        assertThat(resEntity.getBody()).isEqualTo("pong");
+        assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 }
