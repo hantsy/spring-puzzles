@@ -1,9 +1,11 @@
 package com.example.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.jni.Local;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -254,7 +256,7 @@ class GreetingHandler {
 @Slf4j
 class WelcomeHandler {
     @RabbitListener(id = "welcome", queues = DemoApplication.QUEUE_WELCOME)
-    public void welcome(GreetingRequest request) {
+    public void handle(GreetingRequest request) {
         log.info("Received greeting request: {} in {}", request, this.getClass().getName());
 
     }
@@ -265,10 +267,10 @@ class WelcomeHandler {
 class HelloHandler {
     @RabbitListener(id = "hello", queues = DemoApplication.QUEUE_HELLO)
     @SendTo("logger")
-    public GreetingResult hello(GreetingRequest request) {
+    public GreetingResult handle(GreetingRequest request) {
         log.info("Received greeting request: {} in {}", request, this.getClass().getName());
         return GreetingResult.builder()
-                .message("Hello, "+ request.getName())
+                .message("Hello, " + request.getName())
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -278,7 +280,7 @@ class HelloHandler {
 @Slf4j
 class LoggerHandler {
     @RabbitListener(id = "logger", queues = DemoApplication.QUEUE_LOGGER)
-    public void welcome(GreetingResult request) {
+    public void handle(GreetingResult request) {
         log.info("Received request: {} in {}", request, this.getClass().getName());
     }
 }

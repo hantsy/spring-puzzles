@@ -34,7 +34,7 @@ public class GreetingHandlerTest {
 
         WelcomeHandler listener = this.harness.getSpy("welcome");
         assertNotNull(listener);
-        verify(listener).welcome(any(GreetingRequest.class));
+        verify(listener).handle(any(GreetingRequest.class));
 
         GreetingHandler greetingHandler = this.harness.getSpy("greeting");
         assertNotNull(greetingHandler);
