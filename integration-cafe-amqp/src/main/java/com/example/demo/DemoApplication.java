@@ -1,10 +1,10 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,15 +15,18 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.dsl.*;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.MessageChannels;
+import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.samples.cafe.*;
+import org.springframework.integration.samples.cafe.xml.Barista;
 import org.springframework.integration.samples.cafe.xml.Waiter;
 import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
@@ -38,7 +41,7 @@ public class DemoApplication {
         Cafe cafe = ctx.getBean(Cafe.class);
         for (int i = 1; i <= 1; i++) {
             Order order = new Order(i);
-            order.addItem(DrinkType.LATTE, 2, false);
+            //order.addItem(DrinkType.LATTE, 2, false);
             order.addItem(DrinkType.MOCHA, 3, true);
             cafe.placeOrder(order);
         }
@@ -168,8 +171,8 @@ public class DemoApplication {
     }
 
     @Bean
-    public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public Jackson2JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     @MessagingGateway
@@ -180,10 +183,6 @@ public class DemoApplication {
 
     }
 
-    private AtomicInteger hotDrinkCounter = new AtomicInteger();
-
-    private AtomicInteger coldDrinkCounter = new AtomicInteger();
-
     @Bean(name = PollerMetadata.DEFAULT_POLLER)
     public PollerMetadata poller() {
         return Pollers.fixedDelay(1000).get();
@@ -192,9 +191,7 @@ public class DemoApplication {
     @Bean
     public IntegrationFlow ordersFlow(AmqpTemplate amqpTemplate) {
         return f -> f
-                .enrichHeaders(spec -> spec.headerExpression("NUMBER", "payload.getNumber()")
-                        .header(AmqpHeaders.CONTENT_TYPE, "application/json")
-                )
+                .enrichHeaders(spec -> spec.<Order>headerFunction("NUMBER", message -> message.getPayload().getNumber()))
                 .handle(
                         Amqp.outboundAdapter(amqpTemplate)
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_ORDERS)
@@ -208,7 +205,6 @@ public class DemoApplication {
                 .from(
                         Amqp.inboundAdapter(connectionFactory, QUEUE_NEW_ORDERS)
                 )
-                .transform(Transformers.fromJson(Order.class))
                 .split(Order.class, Order::getItems)
                 .channel(c -> c.executor(Executors.newCachedThreadPool()))
                 .<OrderItem, Boolean>route(OrderItem::isIced, mapping -> mapping
@@ -229,24 +225,22 @@ public class DemoApplication {
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_DRINKS)
                                 .routingKey(ROUTING_KEY_COLD_DRINKS)
                 )
+                .log("coldDrinksFlow")
+                .channel(preparedDrinksChannel())
                 .get();
     }
 
     @Bean
-    MessageChannel coldJsonDrinksChannel() {
-        return MessageChannels.queue("coldJsonDrinks").get();
-    }
-
-    @Bean
-    public IntegrationFlow coldDrinksBaristaFlow(ConnectionFactory connectionFactory) {
+    public IntegrationFlow coldDrinksBaristaFlow(ConnectionFactory connectionFactory, Barista barista) {
         return IntegrationFlows
-                .from(
-                        Amqp.inboundGateway(connectionFactory, QUEUE_COLD_DRINKS)
+                .from(Amqp.inboundGateway(connectionFactory, QUEUE_COLD_DRINKS)
+                        .configureContainer(
+                                c -> c.receiveTimeout(10000)
+                        )
                 )
-                .handle("barista", "prepareColdDrink")
+                .handle(OrderItem.class, (payload, headers) -> (Drink) barista.prepareColdDrink(payload))
                 .get();
     }
-
 
     @Bean
     public IntegrationFlow hotDrinksFlow(AmqpTemplate amqpTemplate) {
@@ -257,37 +251,42 @@ public class DemoApplication {
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_DRINKS)
                                 .routingKey(ROUTING_KEY_HOT_DRINKS)
                 )
+                .log("hotDrinksFlow")
+                .channel(preparedDrinksChannel())
                 .get();
     }
 
     @Bean
-    MessageChannel hotJsonDrinksChannel() {
-        return MessageChannels.queue("hotJsonDrinks").get();
-    }
-
-    @Bean
-    public IntegrationFlow hotDrinksBaristaFlow(ConnectionFactory connectionFactory) {
+    public IntegrationFlow hotDrinksBaristaFlow(ConnectionFactory connectionFactory, Barista barista) {
         return IntegrationFlows
-                .from(
-                        Amqp.inboundGateway(connectionFactory, QUEUE_HOT_DRINKS)
-                        //  .requestChannel(hotJsonDrinksChannel())
+                .from(Amqp.inboundGateway(connectionFactory, QUEUE_HOT_DRINKS)
+                        .configureContainer(
+                                c -> c.receiveTimeout(10000)
+                        )
                 )
-                //.transform(Transformers.fromJson(OrderItem.class))
-                .handle("barista", "prepareHotDrink")
-                //.transform(Transformers.toJson("text/x-json"))
+                .handle(OrderItem.class, (payload, headers) -> barista.prepareHotDrink(payload))
                 .get();
     }
 
-
     @Bean
-    MessageChannel preparedJsonDrinksChannel() {
-        return MessageChannels.direct("preparedJsonDrinks").get();
+    MessageChannel preparedColdDrinksChannel() {
+        return MessageChannels.queue("preparedColdDrinks", 50).get();
     }
 
     @Bean
-    public IntegrationFlow preparedDrinksFlow(AmqpTemplate amqpTemplate, Waiter waiter) {
+    MessageChannel preparedHotDrinksChannel() {
+        return MessageChannels.queue("preparedHotDrinks", 50).get();
+    }
+
+    @Bean
+    MessageChannel preparedDrinksChannel() {
+        return MessageChannels.queue("preparedDrinks", 50).get();
+    }
+
+    @Bean
+    public IntegrationFlow collectDrinksFlow(Waiter waiter) {
         return IntegrationFlows
-                .from(preparedJsonDrinksChannel())
+                .from(preparedDrinksChannel())
                 .aggregate(aggregator -> aggregator
                         .outputProcessor(g -> waiter.prepareDelivery(
                                 g.getMessages()
@@ -298,14 +297,19 @@ public class DemoApplication {
                         )
                         .correlationStrategy(m -> ((Drink) m.getPayload()).getOrderNumber()))
                 .enrichHeaders(spec -> spec.<Delivery>headerFunction("NUMBER", m -> m.getPayload().getOrderNumber()))
-                .channel(c -> c.direct("jsonDeliveries"))
+                .channel(deliveriesChannel())
                 .get();
+    }
+
+    @Bean
+    MessageChannel deliveriesChannel() {
+        return MessageChannels.direct("deliveries").get();
     }
 
     @Bean
     public IntegrationFlow deliveriesFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlows
-                .from("jsonDeliveries")
+                .from(deliveriesChannel())
                 .handle(// listen rabbit by extra listener.
                         Amqp.outboundAdapter(amqpTemplate)
                                 .exchangeName(FANOUT_EXCHANGE_CAFE_DELIVERIES)
@@ -314,8 +318,6 @@ public class DemoApplication {
                 )
                 .get();
     }
-
-
 
 /*
 
