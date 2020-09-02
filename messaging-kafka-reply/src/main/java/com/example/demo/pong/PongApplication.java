@@ -26,7 +26,7 @@ public class PongApplication {
 @Slf4j
 @RequiredArgsConstructor
 class PongHandler {
-    @KafkaListener(groupId = "server", containerGroup = "pingpongGroup", topics = PongApplication.TOPIC_PINGPONG)
+    @KafkaListener(groupId = "pong", topics = PongApplication.TOPIC_PINGPONG)
     @SendTo // use default replyTo expression
     public String handle(String request) {
         log.info("Received: {} in {}", request, this.getClass().getName());

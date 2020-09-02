@@ -52,8 +52,8 @@ public class PingApplication {
             ConcurrentKafkaListenerContainerFactory<String, String> containerFactory) {
 
         ConcurrentMessageListenerContainer<String, String> listenerContainer =
-                containerFactory.createContainer("pingpong");
-        listenerContainer.getContainerProperties().setGroupId("pingpongGroup");
+                containerFactory.createContainer("replies");
+        listenerContainer.getContainerProperties().setGroupId("repliesGroup");
         listenerContainer.setAutoStartup(false);
         return listenerContainer;
     }
