@@ -31,12 +31,11 @@ import org.springframework.stereotype.Component;
  * @author Tom McCuch
  * @author Gary Russell
  */
-@Component
 public class Barista {
 
 	private static Log logger = LogFactory.getLog(Barista.class);
 
-	private long hotDrinkDelay = 5000;
+	private long hotDrinkDelay = 500;
 
 	private long coldDrinkDelay = 1000;
 

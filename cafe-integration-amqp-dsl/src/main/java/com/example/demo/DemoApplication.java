@@ -1,11 +1,9 @@
 package com.example.demo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -15,10 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.integration.amqp.dsl.Amqp;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.dsl.IntegrationFlow;
-import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.dsl.MessageChannels;
-import org.springframework.integration.dsl.Pollers;
+import org.springframework.integration.dsl.*;
 import org.springframework.integration.samples.cafe.*;
 import org.springframework.integration.samples.cafe.xml.Barista;
 import org.springframework.integration.samples.cafe.xml.Waiter;
@@ -26,11 +21,11 @@ import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.stereotype.Component;
 
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @SpringBootApplication
-@ComponentScan(basePackages = "org.springframework.integration.samples.cafe")
 public class DemoApplication {
 
     public static void main(String[] args) throws Exception {
@@ -39,10 +34,10 @@ public class DemoApplication {
                 .run(args);
 
         Cafe cafe = ctx.getBean(Cafe.class);
-        for (int i = 1; i <= 1; i++) {
+        for (int i = 1; i <= 100; i++) {
             Order order = new Order(i);
-            //order.addItem(DrinkType.LATTE, 2, false);
-            order.addItem(DrinkType.MOCHA, 3, true);
+            order.addItem(DrinkType.LATTE, new Random().nextInt(5)+1, false);
+            order.addItem(DrinkType.MOCHA, new Random().nextInt(5)+1, true);
             cafe.placeOrder(order);
         }
 
@@ -51,13 +46,13 @@ public class DemoApplication {
         ctx.close();
     }
 
-    public static final String ROUTING_PATTERN = "order.#";
+    public static final String ROUTING_PATTERN_ORDERS = "order.*";
     public static final String ROUTING_KEY = "order.new";
     public static final String TOPIC_EXCHANGE_CAFE_ORDERS = "cafe-orders";
     public static final String QUEUE_ALL_ORDERS = "all-orders";
     public static final String QUEUE_NEW_ORDERS = "new-orders";
 
-    public static final String ROUTING_PATTERN_CAFE_DRINKS = "drink.#";
+    public static final String ROUTING_PATTERN_CAFE_DRINKS = "drink.*";
     public static final String TOPIC_EXCHANGE_CAFE_DRINKS = "cafe-drinks";
     public static final String QUEUE_ALL_DRINKS = "all-drinks";
 
@@ -69,8 +64,8 @@ public class DemoApplication {
     public static final String QUEUE_HOT_DRINKS = "hot-drinks";
     public static final String QUEUE_ALL_HOT_DRINKS = "all-hot-drinks";
 
-    public static final String FANOUT_EXCHANGE_CAFE_DELIVERIES = "cafe-delivers";
-    public static final String QUEUE_ALL_DELIVERIES = "all-delivers";
+    public static final String FANOUT_EXCHANGE_CAFE_DELIVERIES = "cafe-deliveries";
+    public static final String QUEUE_ALL_DELIVERIES = "all-deliveries";
 
     //rabbit beans for orders.
     @Bean
@@ -90,12 +85,12 @@ public class DemoApplication {
 
     @Bean
     Binding allOrdersBinding(Queue allOrdersQueue, TopicExchange ordersExchange) {
-        return BindingBuilder.bind(allOrdersQueue).to(ordersExchange).with(ROUTING_PATTERN);
+        return BindingBuilder.bind(allOrdersQueue).to(ordersExchange).with(ROUTING_PATTERN_ORDERS);
     }
 
     @Bean
     Binding newOrdersBinding(Queue newOrdersQueue, TopicExchange ordersExchange) {
-        return BindingBuilder.bind(newOrdersQueue).to(ordersExchange).with(ROUTING_PATTERN);
+        return BindingBuilder.bind(newOrdersQueue).to(ordersExchange).with(ROUTING_PATTERN_ORDERS);
     }
 
     // rabbit beans for drinks.
@@ -170,9 +165,19 @@ public class DemoApplication {
         return BindingBuilder.bind(allDeliveriesQueue).to(deliveriesExchange);
     }
 
+//    @Bean
+//    public Jackson2JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
+//        return new Jackson2JsonMessageConverter(objectMapper);
+//    }
+
     @Bean
-    public Jackson2JsonMessageConverter messageConverter(ObjectMapper objectMapper) {
-        return new Jackson2JsonMessageConverter(objectMapper);
+    Barista barista() {
+        return new Barista();
+    }
+
+    @Bean
+    Waiter waiter() {
+        return new Waiter();
     }
 
     @MessagingGateway
@@ -192,6 +197,9 @@ public class DemoApplication {
     public IntegrationFlow ordersFlow(AmqpTemplate amqpTemplate) {
         return f -> f
                 .enrichHeaders(spec -> spec.<Order>headerFunction("NUMBER", message -> message.getPayload().getNumber()))
+                .channel(MessageChannels.direct("newOrders"))
+                .transform(Transformers.toJson())
+                .channel(MessageChannels.direct("jsonNewOrders"))
                 .handle(
                         Amqp.outboundAdapter(amqpTemplate)
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_ORDERS)
@@ -205,28 +213,40 @@ public class DemoApplication {
                 .from(
                         Amqp.inboundAdapter(connectionFactory, QUEUE_NEW_ORDERS)
                 )
+                .transform(Transformers.fromJson(Order.class))
+                .channel(MessageChannels.direct("preOrders"))
                 .split(Order.class, Order::getItems)
-                .channel(c -> c.executor(Executors.newCachedThreadPool()))
+                .channel(c -> c.executor("preDrinks", Executors.newCachedThreadPool()))
                 .<OrderItem, Boolean>route(OrderItem::isIced, mapping -> mapping
-                        .channelMapping(true, MessageChannels.queue("coldDrinks", 10).get())
-                        .channelMapping(false, MessageChannels.queue("hotDrinks", 10).get())
-
+                        .channelMapping(true, coldDrinksChannel())
+                        .channelMapping(false, hotDrinksChannel())
                 )
                 .get();
+    }
+
+    @Bean
+    MessageChannel coldDrinksChannel() {
+        return MessageChannels.queue("coldDrinks", 10).get();
+    }
+
+    @Bean
+    MessageChannel hotDrinksChannel() {
+        return MessageChannels.queue("hotDrinks", 10).get();
     }
 
 
     @Bean
     public IntegrationFlow coldDrinksFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlows
-                .from("coldDrinks")
+                .from(coldDrinksChannel())
+                .transform(Transformers.toJson())
                 .handle(
                         Amqp.outboundGateway(amqpTemplate)
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_DRINKS)
                                 .routingKey(ROUTING_KEY_COLD_DRINKS)
                 )
-                .log("coldDrinksFlow")
-                .channel(preparedDrinksChannel())
+                .log("[coldDrinksFlow]")
+                .channel(preparedJsonDrinksChannel())
                 .get();
     }
 
@@ -237,56 +257,92 @@ public class DemoApplication {
                         .configureContainer(
                                 c -> c.receiveTimeout(10000)
                         )
+                        .requestChannel(coldDrinksRequestChannel())
+                        .replyChannel(coldDrinksReplyChannel())
                 )
-                .handle(OrderItem.class, (payload, headers) -> (Drink) barista.prepareColdDrink(payload))
+                .channel(coldDrinksRequestChannel())
+                .transform(Transformers.fromJson(OrderItem.class))
+                .handle(OrderItem.class, (payload, headers) -> barista.prepareColdDrink(payload))
+//                .handle(OrderItem.class, new GenericHandler<OrderItem>() {
+//                    @Override
+//                    public Object handle(OrderItem payload, MessageHeaders headers) {
+//                        return barista.prepareColdDrink(payload);
+//                    }
+//                })
+//                .<OrderItem, Drink>transform(p -> barista.prepareColdDrink(p))
+
+                .transform(Transformers.toJson())
+                .log("[coldDrinksBaristaFlow]")
+                .channel(coldDrinksReplyChannel())
                 .get();
+    }
+
+    @Bean
+    MessageChannel coldDrinksRequestChannel() {
+        return MessageChannels.direct("coldDrinksRequest").get();
+    }
+
+    @Bean
+    MessageChannel coldDrinksReplyChannel() {
+        return MessageChannels.direct("coldDrinksReply").get();
     }
 
     @Bean
     public IntegrationFlow hotDrinksFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlows
-                .from("hotDrinks")
+                .from(hotDrinksChannel())
+                .transform(Transformers.toJson())
                 .handle(
                         Amqp.outboundGateway(amqpTemplate)
                                 .exchangeName(TOPIC_EXCHANGE_CAFE_DRINKS)
                                 .routingKey(ROUTING_KEY_HOT_DRINKS)
                 )
-                .log("hotDrinksFlow")
-                .channel(preparedDrinksChannel())
+                .log("[hotDrinksFlow]")
+                .channel(preparedJsonDrinksChannel())
                 .get();
     }
 
+@Bean
+public IntegrationFlow hotDrinksBaristaFlow(ConnectionFactory connectionFactory, Barista barista) {
+    return IntegrationFlows
+            .from(Amqp.inboundGateway(connectionFactory, QUEUE_HOT_DRINKS)
+                    .configureContainer(
+                            c -> c.receiveTimeout(10000)
+                    )
+                    .requestChannel(hotDrinksRequestChannel())
+                    .replyChannel(hotDrinksReplyChannel())
+            )
+            .channel(hotDrinksRequestChannel())
+            .transform(Transformers.fromJson(OrderItem.class))
+            .handle(OrderItem.class, (payload, headers) -> barista.prepareHotDrink(payload))
+            .transform(Transformers.toJson())
+            .log("[hotDrinksBaristaFlow]")
+            .channel(hotDrinksReplyChannel())
+            .get();
+}
+
+
     @Bean
-    public IntegrationFlow hotDrinksBaristaFlow(ConnectionFactory connectionFactory, Barista barista) {
-        return IntegrationFlows
-                .from(Amqp.inboundGateway(connectionFactory, QUEUE_HOT_DRINKS)
-                        .configureContainer(
-                                c -> c.receiveTimeout(10000)
-                        )
-                )
-                .handle(OrderItem.class, (payload, headers) -> barista.prepareHotDrink(payload))
-                .get();
+    MessageChannel hotDrinksRequestChannel() {
+        return MessageChannels.direct("hotDrinksRequest").get();
     }
 
     @Bean
-    MessageChannel preparedColdDrinksChannel() {
-        return MessageChannels.queue("preparedColdDrinks", 50).get();
+    MessageChannel hotDrinksReplyChannel() {
+        return MessageChannels.direct("hotDrinksReply").get();
     }
 
     @Bean
-    MessageChannel preparedHotDrinksChannel() {
-        return MessageChannels.queue("preparedHotDrinks", 50).get();
-    }
-
-    @Bean
-    MessageChannel preparedDrinksChannel() {
-        return MessageChannels.queue("preparedDrinks", 50).get();
+    MessageChannel preparedJsonDrinksChannel() {
+        return MessageChannels.queue("preparedJsonDrinks", 50).get();
     }
 
     @Bean
     public IntegrationFlow collectDrinksFlow(Waiter waiter) {
         return IntegrationFlows
-                .from(preparedDrinksChannel())
+                .from(preparedJsonDrinksChannel())
+                .transform(Transformers.fromJson(Drink.class))
+                .channel(MessageChannels.direct("preparedDrinks"))
                 .aggregate(aggregator -> aggregator
                         .outputProcessor(g -> waiter.prepareDelivery(
                                 g.getMessages()
@@ -296,20 +352,25 @@ public class DemoApplication {
                                 )
                         )
                         .correlationStrategy(m -> ((Drink) m.getPayload()).getOrderNumber()))
+                .channel(MessageChannels.direct("preDeliveries"))
                 .enrichHeaders(spec -> spec.<Delivery>headerFunction("NUMBER", m -> m.getPayload().getOrderNumber()))
-                .channel(deliveriesChannel())
+                .channel(MessageChannels.direct("deliveries"))
+                .transform(Transformers.toJson())
+                .channel(jsonDeliveriesChannel())
                 .get();
     }
 
     @Bean
-    MessageChannel deliveriesChannel() {
-        return MessageChannels.direct("deliveries").get();
+    MessageChannel jsonDeliveriesChannel() {
+        return MessageChannels.direct("jsonDeliveries").get();
     }
 
     @Bean
     public IntegrationFlow deliveriesFlow(AmqpTemplate amqpTemplate) {
         return IntegrationFlows
-                .from(deliveriesChannel())
+                .from(jsonDeliveriesChannel())
+                .transform(Transformers.fromJson(Delivery.class))
+                .log("[deliveriesFlow]")
                 .handle(// listen rabbit by extra listener.
                         Amqp.outboundAdapter(amqpTemplate)
                                 .exchangeName(FANOUT_EXCHANGE_CAFE_DELIVERIES)
@@ -319,67 +380,6 @@ public class DemoApplication {
                 .get();
     }
 
-/*
-
-    @Bean
-    public IntegrationFlow orders() {
-        return f -> f
-                .split(Order.class, Order::getItems)
-                .channel(c -> c.executor(Executors.newCachedThreadPool()))
-                .<OrderItem, Boolean>route(OrderItem::isIced, mapping -> mapping
-                        .subFlowMapping(true, sf -> sf
-                                .channel(c -> c.queue(10))
-                                .publishSubscribeChannel(c -> c
-                                        .subscribe(s -> s.handle(m -> sleepUninterruptibly(1, TimeUnit.SECONDS)))
-                                        .subscribe(sub -> sub
-                                                .<OrderItem, String>transform(p ->
-                                                        Thread.currentThread().getName() +
-                                                                " prepared cold drink #" +
-                                                                this.coldDrinkCounter.incrementAndGet() +
-                                                                " for order #" + p.getOrderNumber() + ": " + p)
-                                                .handle(m -> System.out.println(m.getPayload()))))
-                                .bridge())
-                        .subFlowMapping(false, sf -> sf
-                                .channel(c -> c.queue(10))
-                                .publishSubscribeChannel(c -> c
-                                        .subscribe(s -> s.handle(m -> sleepUninterruptibly(5, TimeUnit.SECONDS)))
-                                        .subscribe(sub -> sub
-                                                .<OrderItem, String>transform(p ->
-                                                        Thread.currentThread().getName() +
-                                                                " prepared hot drink #" +
-                                                                this.hotDrinkCounter.incrementAndGet() +
-                                                                " for order #" + p.getOrderNumber() + ": " + p)
-                                                .handle(m -> System.out.println(m.getPayload()))))
-                                .bridge()))
-                .<OrderItem, Drink>transform(orderItem ->
-                        new Drink(orderItem.getOrderNumber(),
-                                orderItem.getDrinkType(),
-                                orderItem.isIced(),
-                                orderItem.getShots()))
-                .aggregate(aggregator -> aggregator
-                        .outputProcessor(g ->
-                                new Delivery(g.getMessages()
-                                        .stream()
-                                        .map(message -> (Drink) message.getPayload())
-                                        .collect(Collectors.toList())))
-                        .correlationStrategy(m -> ((Drink) m.getPayload()).getOrderNumber()))
-                .handle(CharacterStreamWritingMessageHandler.stdout());
-    }
-
-    private static void sleepUninterruptibly(long sleepFor, TimeUnit unit) {
-        boolean interrupted = false;
-        try {
-            unit.sleep(sleepFor);
-        } catch (InterruptedException e) {
-            interrupted = true;
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-*/
-
 }
 
 @Component
@@ -387,7 +387,7 @@ public class DemoApplication {
 class DeliveryTracker {
 
     @RabbitListener(queues = DemoApplication.QUEUE_ALL_DELIVERIES)
-    public void track(Delivery delivery) {
-        log.info("delivery info :: {}", delivery);
+    public void track(Delivery deliveryJson) {
+        log.info("delivery info ::\n{}", deliveryJson);
     }
 }

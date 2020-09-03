@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 /**
  * @author Marius Bogoevici
  */
-@Component
 public class Waiter {
 
 	public Delivery prepareDelivery(List<Drink> drinks) {
