@@ -20,6 +20,5 @@ mvn verify -Pit // for functional tests
 
 * [Spring AMQP Reference Doc](https://docs.spring.io/spring-amqp/reference/html/)
 * [Spring Boot Reference Docs # Messaging](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-messaging)
-* [Messaging with Spring AMQP](https://www.baeldung.com/spring-amqp)
-* [Request/Response Pattern with Spring AMQP](https://reflectoring.io/amqp-request-response/)
+* [Spring Integration Reference # DSL](https://docs.spring.io/spring-integration/reference/html/dsl.html#)
 

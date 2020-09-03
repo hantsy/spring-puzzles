@@ -263,14 +263,6 @@ public class DemoApplication {
                 .channel(coldDrinksRequestChannel())
                 .transform(Transformers.fromJson(OrderItem.class))
                 .handle(OrderItem.class, (payload, headers) -> barista.prepareColdDrink(payload))
-//                .handle(OrderItem.class, new GenericHandler<OrderItem>() {
-//                    @Override
-//                    public Object handle(OrderItem payload, MessageHeaders headers) {
-//                        return barista.prepareColdDrink(payload);
-//                    }
-//                })
-//                .<OrderItem, Drink>transform(p -> barista.prepareColdDrink(p))
-
                 .transform(Transformers.toJson())
                 .log("[coldDrinksBaristaFlow]")
                 .channel(coldDrinksReplyChannel())
