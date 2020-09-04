@@ -15,9 +15,24 @@ public class JdbcPostRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public List<Post> findAll() {
-       return  this.namedParameterJdbcTemplate.query(
+        return this.namedParameterJdbcTemplate.query(
                 "select * from POSTS",
                 Map.of(),
+                (rs, rowNum) -> Post.builder()
+                        .id(rs.getLong("ID"))
+                        .title(rs.getString("TITLE"))
+                        .body(rs.getString("BODY"))
+                        //.createdAt(rs.getTimestamp("CREATED_AT").toLocalDateTime())
+                        // h2, mysql and postgres JDBC drivers have supported Java 8 DateTime.
+                        .createdAt(rs.getObject("CREATED_AT", LocalDateTime.class))
+                        .build()
+        );
+    }
+
+    public Post findById(Long id) {
+        return this.namedParameterJdbcTemplate.queryForObject(
+                "select * from POSTS where id=:id",
+                Map.of("id", id),
                 (rs, rowNum) -> Post.builder()
                         .id(rs.getLong("ID"))
                         .title(rs.getString("TITLE"))

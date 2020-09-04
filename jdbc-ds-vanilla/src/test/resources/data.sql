@@ -1,2 +1,2 @@
 delete from POSTS;
-insert into POSTS(TITLE, BODY) values ('test mybatis', 'content of mybatis');
+insert into POSTS(ID, TITLE, BODY) values (1, 'test title', 'content of test');

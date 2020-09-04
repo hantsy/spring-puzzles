@@ -12,12 +12,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +69,12 @@ public class JdbcPostRepositoryTest {
 
         verify(mockTemplate, times(1)).query(anyString(), isA(Map.class), isA(RowMapper.class));
         verifyNoMoreInteractions(mockTemplate);
+
+        //if no stubbing on the method `findById`, it will NOT hit database
+        var post = posts.findById(1L);
+        assertThat(post).isNull();
+        verify(mockTemplate, times(1)).queryForObject(anyString(), isA(Map.class), isA(RowMapper.class));
+        verifyNoMoreInteractions(mockTemplate);
     }
 
     @Test
@@ -80,6 +89,12 @@ public class JdbcPostRepositoryTest {
 
         verify(spyTemplate, times(1)).query(anyString(), isA(Map.class), isA(RowMapper.class));
         verifyNoMoreInteractions(spyTemplate);
+
+        //if no stubbing on the method `findById`, it will hit real database
+        var post = realPosts.findById(1L);
+        assertThat(post).isNotNull();
+        assertThat(post.getTitle()).isEqualTo("test title");
+        // can not verify the interactions here
     }
 }
 
@@ -87,4 +102,16 @@ public class JdbcPostRepositoryTest {
 @ComponentScan
 @Import({DataSourceConfig.class, JdbcConfig.class})
 class TestConfig {
+    @Autowired
+    DataSource dataSource;
+
+    @PostConstruct
+    public void init() {
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        populator.addScripts(
+                new ClassPathResource("schema.sql"),
+                new ClassPathResource("data.sql")
+        );
+        populator.execute(dataSource);
+    }
 }
