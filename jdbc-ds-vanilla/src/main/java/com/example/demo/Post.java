@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
@@ -43,4 +44,9 @@ public class Post {
     @org.springframework.data.relational.core.mapping.Column("CREATED_AT")
     @CreatedDate
     private LocalDateTime createdAt;
+
+    @Column(name = "UPDATED_AT")
+    @org.springframework.data.relational.core.mapping.Column("UPDATED_AT")
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }

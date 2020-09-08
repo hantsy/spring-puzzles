@@ -98,20 +98,3 @@ public class JdbcPostRepositoryTest {
     }
 }
 
-@Configuration
-@ComponentScan
-@Import({DataSourceConfig.class, JdbcConfig.class})
-class TestConfig {
-    @Autowired
-    DataSource dataSource;
-
-    @PostConstruct
-    public void init() {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScripts(
-                new ClassPathResource("schema.sql"),
-                new ClassPathResource("data.sql")
-        );
-        populator.execute(dataSource);
-    }
-}
