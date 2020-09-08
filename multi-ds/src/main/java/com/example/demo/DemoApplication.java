@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication(exclude = {
         DataSourceAutoConfiguration.class,
@@ -21,6 +22,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
         HibernateJpaAutoConfiguration.class,
         TransactionAutoConfiguration.class
 })
+@EnableJpaAuditing
 @Slf4j
 public class DemoApplication {
 

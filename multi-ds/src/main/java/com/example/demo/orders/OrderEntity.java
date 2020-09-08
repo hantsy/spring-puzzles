@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
@@ -14,6 +17,7 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class OrderEntity implements Serializable {
 
     @Id
@@ -25,4 +29,7 @@ public class OrderEntity implements Serializable {
 
     // use BigDecimal or Java Money API in the real world application.
     private Double amount;
+
+    @CreatedDate
+    LocalDateTime createdAt;
 }

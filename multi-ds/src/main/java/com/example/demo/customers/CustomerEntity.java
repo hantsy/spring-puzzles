@@ -4,9 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customers")
@@ -14,6 +17,7 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class CustomerEntity implements Serializable {
 
     @Id
@@ -23,4 +27,7 @@ public class CustomerEntity implements Serializable {
     private String firstName;
 
     private String lastName;
+
+    @CreatedDate
+    LocalDateTime createdAt;
 }
