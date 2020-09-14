@@ -20,21 +20,21 @@ public class DemoApplication {
     }
 
     @Bean
-    ApplicationRunner runner(CustomerRepository customers, OrderRepository orders) {
-//        ApplicationRunner runner(
-//                R2dbcRepository<Customer, Long> customers,
-//                R2dbcRepository<Order, Long> orders
-//        ) {
+ //   ApplicationRunner runner(CustomerRepository customers, OrderRepository orders) {
+        ApplicationRunner runner(
+                R2dbcRepository<Customer, Long> customers,
+                R2dbcRepository<Order, Integer> orders
+        ) {
         return args -> {
             customers
                     .save(Customer.builder().firstName("Hantsy@DemoApplication").lastName("Bai").build())
                     .log()
                     //see: https://stackoverflow.com/questions/63878598/numeric-types-mapping-issue-in-r2dbc-postgres
-//                    .flatMap(
-//                            c -> orders
-//                                    .save(Order.builder().customerId(c.getId()).amount(201.0).build())
-//                    )
-//                    .log()
+                    .flatMap(
+                            c -> orders
+                                    .save(Order.builder().customerId(c.getId()).amount(201.0).build())
+                    )
+                    .log()
                     .subscribe();
         };
     }
