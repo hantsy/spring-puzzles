@@ -51,7 +51,8 @@ public class OrderConfig extends AbstractR2dbcConfiguration {
             @Qualifier("ordersDatabaseClient") DatabaseClient ordersDatabaseClient,
             ReactiveDataAccessStrategy dataAccessStrategy
     ) {
-        return super.r2dbcEntityTemplate(ordersDatabaseClient, dataAccessStrategy);
+        //return super.r2dbcEntityTemplate(ordersDatabaseClient, dataAccessStrategy);
+        return new R2dbcEntityTemplate(ordersDatabaseClient, dataAccessStrategy);
     }
 
     @PostConstruct
