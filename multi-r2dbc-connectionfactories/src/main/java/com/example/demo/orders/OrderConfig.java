@@ -24,15 +24,6 @@ public class OrderConfig {
     @Qualifier("ordersConnectionFactory")
     public ConnectionFactory ordersConnectionFactory() {
         return ConnectionFactories.get("r2dbc:postgres://user:password@localhost/orders");
-//        return new PostgresqlConnectionFactory(
-//                PostgresqlConnectionConfiguration.builder()
-//                        .host("localhost")
-//                        .database("orders")
-//                        .username("user")
-//                        .password("password")
-//                        //.codecRegistrar(EnumCodec.builder().withEnum("post_status", Post.Status.class).build())
-//                        .build()
-//        );
     }
 
 

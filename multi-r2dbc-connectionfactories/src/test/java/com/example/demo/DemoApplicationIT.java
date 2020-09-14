@@ -16,8 +16,15 @@ public class DemoApplicationIT {
     }
 
     @Test
-    public void willLoadPosts() {
-        this.client.get().uri("/posts")
+    public void willLoadOrders() {
+        this.client.get().uri("/orders")
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void willLoadCustomers() {
+        this.client.get().uri("/customers")
                 .exchange()
                 .expectStatus().isOk();
     }
