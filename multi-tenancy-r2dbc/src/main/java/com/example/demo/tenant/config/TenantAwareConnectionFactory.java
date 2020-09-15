@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 public class TenantAwareConnectionFactory extends AbstractRoutingConnectionFactory {
     @Override
     protected Mono<Object> determineCurrentLookupKey() {
-        return TenantIdContextHolder.getTenantId().map(id -> (Object) id);
+        return CurrentTenantIdHolder.getTenantId().map(id -> (Object) id);
     }
 }

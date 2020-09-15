@@ -5,9 +5,11 @@ import reactor.util.context.Context;
 
 import java.util.function.Function;
 
-public class TenantIdContextHolder {
+// refer to the source code of ReactiveSecurityContextHolder.
+// see: https://github.com/spring-projects/spring-security/blob/master/core/src/main/java/org/springframework/security/core/context/ReactiveSecurityContextHolder.java
+public class CurrentTenantIdHolder {
 
-    public static final String TENANT_ID = "TENANT_ID";
+    public static final String TENANT_ID = CurrentTenantIdHolder.class.getName() + ".TENANT_ID";
 
     public static Context withTenantId(String id) {
         return Context.of(TENANT_ID, Mono.just(id));

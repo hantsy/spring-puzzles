@@ -15,7 +15,7 @@ public class TenantFilter implements WebFilter {
         var value = exchange.getRequest().getHeaders().getFirst("X-Tenant-Id");
         if (StringUtils.hasText(value)) {
             return chain.filter(exchange)
-                    .contextWrite(TenantIdContextHolder.withTenantId(value));
+                    .contextWrite(CurrentTenantIdHolder.withTenantId(value));
         }
         return chain.filter(exchange);
     }
