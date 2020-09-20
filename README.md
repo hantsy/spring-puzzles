@@ -1,6 +1,6 @@
-# spring-playground
+# Spring puzzles
 
-My personal playground to share tips, code samples, techniques, problem-resolving methods or cutting-edge features in Spring development.
+My personal playground to share tips, code samples, techniques, problem-resolving methods, answers of StackOverflow questions or cutting-edge features in Spring development.
 
 
 
