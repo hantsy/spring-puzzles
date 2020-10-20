@@ -1,0 +1,17 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example.modular</groupId>
+    <artifactId>greeting-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>greeting-parent</name>
+    <description>Spring Boot AutoConfiguration demo</description>
+    <modules>
+        <module>greeting-webapp</module>
+        <module>greeting-library</module>
+        <module>greeting-spring-config</module>
+    </modules>
+
+</project>
