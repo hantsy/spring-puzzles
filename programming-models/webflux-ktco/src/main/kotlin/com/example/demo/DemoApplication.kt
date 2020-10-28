@@ -1,5 +1,6 @@
 package com.example.demo
 
+import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrElse
@@ -9,20 +10,39 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
 import org.springframework.context.event.EventListener
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.annotation.Id
 import org.springframework.data.r2dbc.repository.R2dbcRepository
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import org.springframework.http.HttpStatus
+import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
+import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
+import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ServerWebExchange
 import java.time.LocalDateTime
 
 @SpringBootApplication
-class DemoApplication
+class DemoApplication {
 
+    @Bean
+    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
+
+        val populator = CompositeDatabasePopulator().apply {
+            addPopulators(ResourceDatabasePopulator(ClassPathResource("schema.sql")))
+            addPopulators(ResourceDatabasePopulator(ClassPathResource("data.sql")))
+        }
+
+        return ConnectionFactoryInitializer().apply {
+            setConnectionFactory(connectionFactory)
+            setDatabasePopulator(populator)
+        }
+    }
+}
 
 fun main(args: Array<String>) {
     runApplication<DemoApplication>(*args)
