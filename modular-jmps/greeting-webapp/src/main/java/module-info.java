@@ -9,6 +9,6 @@ module greeting.webapp {
     requires spring.boot.starter.web;
 
     exports com.example.greeting.app;
-
+    opens com.example.greeting.app;
     //uses GreetingApplication;
 }
