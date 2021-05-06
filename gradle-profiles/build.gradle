@@ -14,8 +14,8 @@ sourceCompatibility = '11'
 apply from: "static-code-analysis.gradle"
 apply from: "code-coverage.gradle"
 
-//if (!hasProperty('buildProfile')) ext.buildProfile = 'default'
-def buildProfile = hasProperty('buildProfile') ? project.property("buildProfile") : "default"
+//if (!hasProperty('buildProfile')) ext.buildProfile = 'dev'
+def buildProfile = hasProperty('buildProfile') ? project.property("buildProfile") : "dev"
 apply from: "profile-${buildProfile}.gradle"
 task greeting {
     doLast {
