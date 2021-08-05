@@ -16,7 +16,7 @@
     <description>Demo project for Spring Boot</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>16</java.version>
 
         <!-- https://repo1.maven.org/maven2/com/oracle/database/jdbc/ -->
         <oracle-jdbc.version>18.3.0.0</oracle-jdbc.version>

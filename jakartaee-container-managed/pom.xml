@@ -18,7 +18,7 @@
     <description>Demo project for Spring Boot</description>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>16</java.version>
 
         <!-- Jakarta EE API -->
         <jakartaee-api.version>8.0.0</jakartaee-api.version>
