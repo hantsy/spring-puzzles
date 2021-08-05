@@ -8,25 +8,26 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.persistence.*;
+import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.springframework.http.ResponseEntity.*;
@@ -63,6 +64,49 @@ class DataInitializer implements ApplicationRunner {
         this.courseRepository.findAll().forEach(
                 c -> c.addStudent(students.get(0))
         );
+    }
+}
+
+@RestController
+@RequestMapping("/report")
+@RequiredArgsConstructor
+class ReportController {
+    private final CourseRepository courseRepository;
+
+    @GetMapping()
+    public ResponseEntity allCourses(@RequestParam(value = "q", required = false) String keyword) {
+
+        Specification<Course> spec = (root, query, cb) -> {
+            var predicates = new ArrayList<Predicate>();
+            if (StringUtils.hasText(keyword)) {
+                predicates.add(
+                        cb.or(
+                                cb.like(root.get(Course_.title), "%" + keyword + "%"),
+                                cb.like(root.get(Course_.description), "%" + keyword + "%")
+                        )
+                );
+            }
+
+            root.fetch(Course_.students);
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        var courses = this.courseRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "title"))
+                .stream()
+                .map(s -> new CourseWithStudentDto(
+                                s.getId(),
+                                s.getTitle(),
+                                s.getDescription(),
+                                s.getStudents()
+                                        .stream()
+                                        .map(t -> new StudentDto(t.getId(), t.getName()))
+                                        .sorted(Comparator.comparing(StudentDto::name))
+                                        .toList()
+                        )
+                )
+                .toList();
+        return ok().body(courses);
     }
 }
 
@@ -141,7 +185,7 @@ class CourseController {
 
     @DeleteMapping("{id}")
     public ResponseEntity deleteById(@PathVariable Long id) {
-        txTemplate.executeWithoutResult( tx -> {
+        txTemplate.executeWithoutResult(tx -> {
             var course = this.courseRepository.getById(id);
             course.getStudents()
                     .forEach(
@@ -197,6 +241,9 @@ record StudentDto(Long id, String name) {
 record CourseDto(Long id, String title, String description) {
 }
 
+record CourseWithStudentDto(Long id, String title, String description, List<StudentDto> students) {
+}
+
 interface StudentRepository extends JpaRepository<Student, Long> {
 
     @EntityGraph("studentWithCourses")
@@ -205,7 +252,7 @@ interface StudentRepository extends JpaRepository<Student, Long> {
     Student readById(Long studentId);
 }
 
-interface CourseRepository extends JpaRepository<Course, Long> {
+interface CourseRepository extends JpaRepository<Course, Long>, JpaSpecificationExecutor<Course> {
     @EntityGraph("courseWithStudents")
     Course getById(Long id);
 

@@ -3,7 +3,6 @@ package com.example.demo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import io.restassured.http.Header;
 import io.restassured.response.ValidatableResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +64,8 @@ class DemoApplicationTests {
         //@formatter:on
     }
 
-    /** This test will go through the following flow:
+    /**
+     * This test will go through the following flow:
      * 1. Create a new course
      * 2. Extract the location and verify it is created.
      * 3. Get the sub resources `/students` under this newly created course.
@@ -147,10 +147,10 @@ class DemoApplicationTests {
         //extract the id from the Location header.
         var studentLocation = studentResponse.extract().headers().get("Location").getValue();
         log.info("Location:: {}", studentLocation);
-        var locArray  = studentLocation.split("/");
+        var locArray = studentLocation.split("/");
 
         assertThat(locArray.length).isGreaterThan(0);
-        var id = Long.parseLong(locArray[locArray.length-1]);
+        var id = Long.parseLong(locArray[locArray.length - 1]);
 
         // add the student to the course.
         //@formatter:off
@@ -216,6 +216,22 @@ class DemoApplicationTests {
             .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_NOT_FOUND);
+        //@formatter:on
+    }
+
+    @Test
+    void testReport() {
+        //@formatter:off
+        given()
+                .accept(ContentType.JSON)
+
+            .when()
+                .get("/report")
+
+            .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("title", hasItem("Jakarta EE course"));
         //@formatter:on
     }
 
