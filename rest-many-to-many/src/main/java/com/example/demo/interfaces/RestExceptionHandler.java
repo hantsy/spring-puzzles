@@ -17,7 +17,7 @@ public class RestExceptionHandler {
             CourseNotFoundException.class
     })
     ResponseEntity handleNotFoundException(Exception exception) {
-        return status(HttpStatus.NOT_FOUND).body(new com.example.demo.interfaces.dto.Error("not_found", exception.getMessage()));
+        return status(HttpStatus.NOT_FOUND).body(new Error("not_found", exception.getMessage()));
     }
 
     @ExceptionHandler(value = {
@@ -27,6 +27,9 @@ public class RestExceptionHandler {
             CoursesOfStudentReachedMaxLimitationException.class
     })
     ResponseEntity handleReachedMaxLimitationException(Exception exception) {
-        return status(HttpStatus.BAD_REQUEST).body(new com.example.demo.interfaces.dto.Error("invalid_request", exception.getMessage()));
+        return status(HttpStatus.BAD_REQUEST).body(new Error("invalid_request", exception.getMessage()));
+    }
+
+    public static record Error(String code, String message) {
     }
 }
