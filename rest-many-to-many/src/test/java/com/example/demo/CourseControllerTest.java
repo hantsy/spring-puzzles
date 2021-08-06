@@ -1,9 +1,13 @@
 package com.example.demo;
 
+import com.example.demo.application.CourseArrangement;
+import com.example.demo.application.exception.CourseNotFoundException;
+import com.example.demo.application.exception.CoursesOfStudentReachedMaxLimitationException;
+import com.example.demo.application.exception.StudentNotFoundException;
+import com.example.demo.application.exception.StudentsOfCourseReachedMaxLimitationException;
 import com.example.demo.domain.Course;
 import com.example.demo.domain.Student;
 import com.example.demo.infra.CourseRepository;
-import com.example.demo.infra.StudentRepository;
 import com.example.demo.interfaces.CourseController;
 import com.example.demo.interfaces.dto.NewCourseCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +47,7 @@ public class CourseControllerTest {
     private CourseRepository courseRepository;
 
     @MockBean
-    private StudentRepository studentRepository;
+    private CourseArrangement courseArrangement;
 
     @MockBean
     private TransactionTemplate txTemplate;
@@ -144,125 +148,83 @@ public class CourseControllerTest {
     @SneakyThrows
     @Test
     public void testAddStudentToCourse() {
-        var mockedStudent = Student.builder().id(2L).name("Tom").build();
-        var mockedData = Course.builder()
-                .id(1L)
-                .title("Spring")
-                .description("desc of Spring course")
-                .build();
-
-        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
-        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
-
-        var mockedTx = mock(TransactionStatus.class);
-        doAnswer(answer -> {
-                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
-                    consumer.accept(mockedTx);
-                    return mockedTx;
-                }
-        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
-
+        doNothing().when(courseArrangement).addStudentToCourse(anyLong(), anyLong());
         //perform request
         mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         //verify
-        verify(this.courseRepository, times(1)).readById(anyLong());
-        verify(this.studentRepository, times(1)).readById(anyLong());
-        verify(this.txTemplate, times(1)).executeWithoutResult(isA(Consumer.class));
-        verifyNoMoreInteractions(this.courseRepository, this.studentRepository, this.txTemplate);
+        verify(this.courseArrangement, times(1)).addStudentToCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
     }
 
     @SneakyThrows
     @Test
     public void testAddStudentToCourse_WhenNoneExistingCourseId_willReturn404() {
-        var mockedStudent = Student.builder().id(2L).name("Tom").build();
-        when(this.courseRepository.findById(anyLong())).thenReturn(Optional.ofNullable(null));
-        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
-
-        var mockedTx = mock(TransactionStatus.class);
-        doAnswer(answer -> {
-                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
-                    consumer.accept(mockedTx);
-                    return mockedTx;
-                }
-        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
-
+        doThrow(new CourseNotFoundException(1L))
+                .when(courseArrangement).addStudentToCourse(anyLong(), anyLong());
         //perform request
         mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         //verify
-        verify(this.courseRepository, times(1)).findById(anyLong());
-        verifyNoInteractions(this.studentRepository);
-        verifyNoMoreInteractions(this.courseRepository);
+        verify(this.courseArrangement, times(1)).addStudentToCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
     }
 
     @SneakyThrows
     @Test
     public void testAddStudentToCourse_WhenNoneExistingStudentId_willReturn404() {
-        var mockedData = Course.builder()
-                .id(1L)
-                .title("Spring")
-                .description("desc of Spring course")
-                .build();
-
-        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
-        when(this.studentRepository.findById(2L)).thenReturn(Optional.ofNullable(null));
-
-        var mockedTx = mock(TransactionStatus.class);
-        doAnswer(answer -> {
-                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
-                    consumer.accept(mockedTx);
-                    return mockedTx;
-                }
-        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
-
+        doThrow(StudentNotFoundException.class)
+                .when(courseArrangement).addStudentToCourse(anyLong(), anyLong());
         //perform request
         mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
         //verify
-        verify(this.courseRepository, times(1)).findById(anyLong());
-        verify(this.studentRepository, times(1)).findById(anyLong());
-        verifyNoMoreInteractions(this.courseRepository, this.studentRepository);
+        verify(this.courseArrangement, times(1)).addStudentToCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testAddStudentToCourse_WhenReachedCourseMaxLimit_willReturn400() {
+        doThrow(CoursesOfStudentReachedMaxLimitationException.class)
+                .when(courseArrangement).addStudentToCourse(anyLong(), anyLong());
+        //perform request
+        mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        //verify
+        verify(this.courseArrangement, times(1)).addStudentToCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testAddStudentToCourse_WhenReachedStudentMaxLimit_willReturn400() {
+        doThrow(StudentsOfCourseReachedMaxLimitationException.class)
+                .when(courseArrangement).addStudentToCourse(anyLong(), anyLong());
+        //perform request
+        mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        //verify
+        verify(this.courseArrangement, times(1)).addStudentToCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
     }
 
     @SneakyThrows
     @Test
     public void testRemoveStudentFromCourse() {
-        var mockedStudent = Student.builder().id(2L).name("Tom").build();
-
-        var studentSet = new HashSet<Student>();
-        studentSet.add(mockedStudent);
-
-        var mockedData = Course.builder()
-                .id(1L)
-                .title("Spring")
-                .description("desc of Spring course")
-                .students(studentSet)
-                .build();
-
-        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
-        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
-
-        var mockedTx = mock(TransactionStatus.class);
-        doAnswer(answer -> {
-                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
-                    consumer.accept(mockedTx);
-                    return mockedTx;
-                }
-        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
-
+        doNothing().when(courseArrangement).removeStudentFromCourse(anyLong(), anyLong());
         //perform request
         mockMvc.perform(delete("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         //verify
-        verify(this.courseRepository, times(1)).readById(anyLong());
-        verify(this.studentRepository, times(1)).readById(anyLong());
-        verify(this.txTemplate, times(1)).executeWithoutResult(isA(Consumer.class));
-        verifyNoMoreInteractions(this.courseRepository, this.studentRepository, this.txTemplate);
+        verify(this.courseArrangement, times(1)).removeStudentFromCourse(anyLong(), anyLong());
+        verifyNoMoreInteractions(this.courseArrangement);
     }
 
     @SneakyThrows
@@ -284,7 +246,7 @@ public class CourseControllerTest {
         courseSet.add(mockedData);
         mockedStudent.setCourses(courseSet);
 
-        when(this.courseRepository.getById(1L)).thenReturn(mockedData);
+        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
         doNothing().when(this.courseRepository).delete(any(Course.class));
         var mockedTx = mock(TransactionStatus.class);
         doAnswer(answer -> {
@@ -299,7 +261,7 @@ public class CourseControllerTest {
                 .andExpect(status().isNoContent());
 
         //verify
-        verify(this.courseRepository, times(1)).getById(anyLong());
+        verify(this.courseRepository, times(1)).findById(anyLong());
         verify(this.courseRepository, times(1)).delete(any(Course.class));
         verify(this.txTemplate, times(1)).executeWithoutResult(isA(Consumer.class));
         verifyNoMoreInteractions(this.courseRepository, this.txTemplate);

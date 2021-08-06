@@ -1,11 +1,9 @@
 package com.example.demo.interfaces;
 
+import com.example.demo.application.CourseArrangement;
 import com.example.demo.application.exception.CourseNotFoundException;
-import com.example.demo.application.exception.StudentNotFoundException;
 import com.example.demo.domain.Course;
-import com.example.demo.domain.Student;
 import com.example.demo.infra.CourseRepository;
-import com.example.demo.infra.StudentRepository;
 import com.example.demo.interfaces.dto.CourseDto;
 import com.example.demo.interfaces.dto.NewCourseCommand;
 import com.example.demo.interfaces.dto.StudentDto;
@@ -29,7 +27,7 @@ import static org.springframework.http.ResponseEntity.*;
 @Validated
 public class CourseController {
     private final CourseRepository courseRepository;
-    private final StudentRepository studentRepository;
+    private final CourseArrangement courseArrangement;
     private final TransactionTemplate txTemplate;
 
     @GetMapping()
@@ -92,22 +90,13 @@ public class CourseController {
 
     @PostMapping("{id}/students/{studentId}")
     public ResponseEntity addStudentToCourse(@PathVariable Long id, @PathVariable Long studentId) {
-        txTemplate.executeWithoutResult(tx -> {
-            Course course = this.courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException(id));
-            Student student = this.studentRepository.findById(studentId).orElseThrow(() -> new StudentNotFoundException(id));
-            course.addStudent(student);
-        });
-
+        this.courseArrangement.addStudentToCourse(studentId, id);
         return noContent().build();
     }
 
     @DeleteMapping("{id}/students/{studentId}")
     public ResponseEntity removeStudentFromCourse(@PathVariable Long id, @PathVariable Long studentId) {
-        txTemplate.executeWithoutResult(tx -> {
-            Course course = this.courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException(id));
-            Student student = this.studentRepository.findById(studentId).orElseThrow(() -> new StudentNotFoundException(id));
-            course.removeStudent(student);
-        });
+        this.courseArrangement.removeStudentFromCourse(studentId, id);
         return noContent().build();
     }
 }
