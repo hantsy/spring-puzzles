@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.interfaces.dto.NewCourseCommand;
+import com.example.demo.interfaces.dto.NewStudentCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -21,7 +23,7 @@ import static org.hamcrest.CoreMatchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
 @Slf4j
-class DemoApplicationTests {
+class IntegrationTests {
 
     @LocalServerPort
     private int port;

@@ -1,5 +1,11 @@
 package com.example.demo;
 
+import com.example.demo.domain.Course;
+import com.example.demo.domain.Student;
+import com.example.demo.infra.CourseRepository;
+import com.example.demo.infra.StudentRepository;
+import com.example.demo.interfaces.CourseController;
+import com.example.demo.interfaces.dto.NewCourseCommand;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -145,8 +151,8 @@ public class CourseControllerTest {
                 .description("desc of Spring course")
                 .build();
 
-        when(this.courseRepository.readById(1L)).thenReturn(mockedData);
-        when(this.studentRepository.readById(2L)).thenReturn(mockedStudent);
+        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
+        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
 
         var mockedTx = mock(TransactionStatus.class);
         doAnswer(answer -> {
@@ -169,6 +175,61 @@ public class CourseControllerTest {
 
     @SneakyThrows
     @Test
+    public void testAddStudentToCourse_WhenNoneExistingCourseId_willReturn404() {
+        var mockedStudent = Student.builder().id(2L).name("Tom").build();
+        when(this.courseRepository.findById(anyLong())).thenReturn(Optional.ofNullable(null));
+        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
+
+        var mockedTx = mock(TransactionStatus.class);
+        doAnswer(answer -> {
+                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
+                    consumer.accept(mockedTx);
+                    return mockedTx;
+                }
+        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
+
+        //perform request
+        mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        //verify
+        verify(this.courseRepository, times(1)).findById(anyLong());
+        verifyNoInteractions(this.studentRepository);
+        verifyNoMoreInteractions(this.courseRepository);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testAddStudentToCourse_WhenNoneExistingStudentId_willReturn404() {
+        var mockedData = Course.builder()
+                .id(1L)
+                .title("Spring")
+                .description("desc of Spring course")
+                .build();
+
+        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
+        when(this.studentRepository.findById(2L)).thenReturn(Optional.ofNullable(null));
+
+        var mockedTx = mock(TransactionStatus.class);
+        doAnswer(answer -> {
+                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
+                    consumer.accept(mockedTx);
+                    return mockedTx;
+                }
+        ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
+
+        //perform request
+        mockMvc.perform(post("/courses/1/students/2").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        //verify
+        verify(this.courseRepository, times(1)).findById(anyLong());
+        verify(this.studentRepository, times(1)).findById(anyLong());
+        verifyNoMoreInteractions(this.courseRepository, this.studentRepository);
+    }
+
+    @SneakyThrows
+    @Test
     public void testRemoveStudentFromCourse() {
         var mockedStudent = Student.builder().id(2L).name("Tom").build();
 
@@ -182,8 +243,8 @@ public class CourseControllerTest {
                 .students(studentSet)
                 .build();
 
-        when(this.courseRepository.readById(1L)).thenReturn(mockedData);
-        when(this.studentRepository.readById(2L)).thenReturn(mockedStudent);
+        when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
+        when(this.studentRepository.findById(2L)).thenReturn(Optional.of(mockedStudent));
 
         var mockedTx = mock(TransactionStatus.class);
         doAnswer(answer -> {

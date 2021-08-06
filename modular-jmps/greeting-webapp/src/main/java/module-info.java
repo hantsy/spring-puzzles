@@ -10,6 +10,6 @@ module greeting.webapp {
     requires spring.context;
 
     exports com.example.greeting.app;
-    opens com.example.greeting.app to  spring.context, spring.core, spring.boot, spring.web;
+    opens com.example.greeting.app to spring.context, spring.core, spring.boot, spring.web;
     //uses GreetingApplication;
 }

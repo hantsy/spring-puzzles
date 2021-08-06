@@ -1,5 +1,9 @@
 package com.example.demo;
 
+import com.example.demo.domain.Course;
+import com.example.demo.domain.Student;
+import com.example.demo.infra.CourseRepository;
+import com.example.demo.infra.StudentRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
