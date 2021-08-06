@@ -98,6 +98,7 @@ class ReportController {
                                 s.getId(),
                                 s.getTitle(),
                                 s.getDescription(),
+                                s.getStudents().size(),
                                 s.getStudents()
                                         .stream()
                                         .map(t -> new StudentDto(t.getId(), t.getName()))
@@ -241,7 +242,7 @@ record StudentDto(Long id, String name) {
 record CourseDto(Long id, String title, String description) {
 }
 
-record CourseWithStudentDto(Long id, String title, String description, List<StudentDto> students) {
+record CourseWithStudentDto(Long id, String title, String description, int countOfStudents, List<StudentDto> students) {
 }
 
 interface StudentRepository extends JpaRepository<Student, Long> {
