@@ -1,0 +1,128 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: rest-many-to-many
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: "16"
+          distribution: "adopt"
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up Database
+        run: |
+          cd rest-many-to-many
+          docker-compose up -d
+          docker ps -a
+      - name: Build with Maven
+        run: mvn -B package --file rest-many-to-many/pom.xml
+
+    # ommits code quality analysis
+  intergration-test:
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: "16"
+          distribution: "adopt"
+
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up Database
+        run: |
+          cd rest-many-to-many
+          docker-compose up -d
+          docker ps -a
+
+      - name: Build with Maven(E2e testing)
+        run: mvn -B verify --file rest-many-to-many/pom.xml -Pit
+
+  dockerize:
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: "16"
+          distribution: "adopt"
+
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build with Maven(Build Docker Image)
+        run: |
+          mvn spring-boot:build-image  --file rest-many-to-many/pom.xml -DskipTests
+          docker image ls
+
+      - name: Run application in Docker Container
+        run: |
+          cd rest-many-to-many
+          chmod a+x ./wait-for-it.sh
+          docker-compose --file ./docker-compose.local.yml up -d db
+          ./wait-for-it.sh localhost:3306 -t 10 -- echo "MySQL is up"
+          sleep 10
+          docker-compose --file ./docker-compose.local.yml up -d app
+          ./wait-for-it.sh localhost:9999 -t 10 -- echo "Application is up"
+          sleep 10
+          docker ps -a
+          docker-compose --file ./docker-compose.local.yml logs
+
+      #       - name: Public IP
+      #         id: ip
+      #         uses: haythem/public-ip@v1.2
+      #       - run: curl http://${{steps.ip.outputs.ipv4}}:8080/report
+      - name: Build with Maven(SmokeTest)
+        env:
+          BASE_API_URL: http://localhost:9999
+        run: |
+          mvn -B verify --file rest-many-to-many/pom.xml -Psmoke
+
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
+      - name: Push Docker Image
+        run: docker push hantsy/rest-many-to-many-example

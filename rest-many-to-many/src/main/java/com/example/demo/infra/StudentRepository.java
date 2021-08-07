@@ -8,6 +8,4 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     @EntityGraph("studentWithCourses")
     Student getById(Long id);
-
-    Student readById(Long studentId);
 }

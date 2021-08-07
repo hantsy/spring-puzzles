@@ -23,7 +23,7 @@ import static org.hamcrest.CoreMatchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")
 @Slf4j
-class IntegrationTests {
+class DemoApplicationTests {
 
     @LocalServerPort
     private int port;

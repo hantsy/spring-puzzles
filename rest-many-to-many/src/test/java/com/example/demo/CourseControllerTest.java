@@ -249,10 +249,10 @@ public class CourseControllerTest {
         when(this.courseRepository.findById(1L)).thenReturn(Optional.of(mockedData));
         doNothing().when(this.courseRepository).delete(any(Course.class));
         var mockedTx = mock(TransactionStatus.class);
-        doAnswer(answer -> {
-                    var consumer = (Consumer<TransactionStatus>) answer.getArgument(0);
+        doAnswer(invocationOnMock -> {
+                    var consumer = (Consumer<TransactionStatus>) invocationOnMock.getArgument(0);
                     consumer.accept(mockedTx);
-                    return mockedTx;
+                    return null;
                 }
         ).when(this.txTemplate).executeWithoutResult(any(Consumer.class));
 
