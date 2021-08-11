@@ -9,10 +9,11 @@
     <name>greeting-parent</name>
     <description>Spring Boot AutoConfiguration demo</description>
     <modules>
-        <module>greeting-library</module>
-        <module>greeting-spring-config</module>
-        <module>greeting-webapp</module>
-        <module>greeting-webapp-test</module>
+        <module>greeting-service</module>
+		<module>greeting-service-impl</module>
+		<module>greeting-service-sample</module>
+        <module>greeting-application</module>
+        <module>greeting-application-test</module>
     </modules>
 
 </project>
