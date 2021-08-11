@@ -12,7 +12,7 @@ module greeting.application {
     requires java.sql;
     requires com.fasterxml.jackson.databind;
 
-    opens com.example.greeting.application ;//to spring.core;
+    opens com.example.greeting.application to spring.core, greeting.application.test;
 
     exports com.example.greeting.application;
 }

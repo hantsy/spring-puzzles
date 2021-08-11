@@ -1,4 +1,4 @@
-module greeting.webapp.test {
+module greeting.application.test {
     requires greeting.application;
 
     requires spring.web;
@@ -23,7 +23,5 @@ module greeting.webapp.test {
     requires org.mockito.junit.jupiter;
     requires transitive net.bytebuddy;
 
-    exports com.example.greeting.application.test;
-
-    opens  com.example.greeting.application.test;
+    opens com.example.greeting.application.test  to spring.core, org.junit.platform.commons;
 }
