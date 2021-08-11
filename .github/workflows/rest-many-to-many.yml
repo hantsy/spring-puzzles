@@ -5,6 +5,8 @@ name: rest-many-to-many
 
 on:
   push:
+    paths:
+      - "rest-many-to-many/**"
     branches: [master]
   pull_request:
     branches: [master]
