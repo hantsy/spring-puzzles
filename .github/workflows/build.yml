@@ -93,7 +93,27 @@ jobs:
           docker-compose up -d
           sleep 10
           docker ps -a
-      - name: Build with Maven(programming-models)
+      - name: Build with Maven(webmvc)
         run: |
-          mvn -B -q clean package --file programming-models/pom.xml
-          mvn -B -q verify --file programming-models/pom.xml -Pit
+          mvn -B -q clean package --file programming-models/webmvc/pom.xml
+          mvn -B -q verify --file programming-models/webmvc/pom.xml -Pit
+      - name: Build with Maven(webflux)
+        run: |
+          mvn -B -q clean package --file programming-models/webflux/pom.xml
+          mvn -B -q verify --file programming-models/webflux/pom.xml -Pit
+      - name: Build with Maven(webmvc-fn)
+        run: |
+          mvn -B -q clean package --file programming-models/webmvc-fn/pom.xml
+          mvn -B -q verify --file programming-models/webmvc-fn/pom.xml -Pit          
+      - name: Build with Maven(webflux-fn)
+        run: |
+          mvn -B -q clean package --file programming-models/webflux-fn/pom.xml
+          mvn -B -q verify --file programming-models/webflux-fn/pom.xml -Pit     
+      - name: Build with Maven(webflux-ktco)
+        run: |
+          mvn -B -q clean package --file programming-models/webflux-ktco/pom.xml
+          mvn -B -q verify --file programming-models/webflux-ktco/pom.xml -Pit     
+      - name: Build with Maven(webflux-ktco-fn)
+        run: |
+          mvn -B -q clean package --file programming-models/webflux-ktco-fn/pom.xml
+          mvn -B -q verify --file programming-models/webflux-ktco-fn/pom.xml -Pit        
