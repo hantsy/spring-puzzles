@@ -53,7 +53,7 @@ jobs:
       - name: Set up RabbitMQ 16
         run: |
           cd amqp
-          docker-comose up -d
+          docker-compose up -d
           sleep 10
           docker ps -a
       - name: Build with Maven
