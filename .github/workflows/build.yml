@@ -56,7 +56,14 @@ jobs:
           docker-compose up -d
           sleep 10
           docker ps -a
-      - name: Build with Maven
+      - name: Build with Maven(hello-amqp)
         run: |
-          mvn -B -q clean package --file amqp/pom.xml
-          mvn -B -q  verify --file amqp/pom.xml -Pit
+          mvn -B -q clean package --file amqp/hello-amqp/pom.xml
+          mvn -B -q verify --file amqp/hello-amqp/pom.xml -Pit
+      - name: Build with Maven(spring-messaging-amqp)
+        run: |
+          mvn -B -q clean package --file amqp/spring-messaging-amqp/pom.xml
+          mvn -B -q verify --file amqp/spring-messaging-amqp/pom.xml -Pit
+      - name: Build with Maven(cafe-integration-dsl-amqp)
+        run: |
+          mvn -B -q clean package --file amqp/cafe-integration-dsl-amqp/pom.xml      
