@@ -67,3 +67,33 @@ jobs:
       - name: Build with Maven(cafe-integration-dsl-amqp)
         run: |
           mvn -B -q clean package --file amqp/cafe-integration-dsl-amqp/pom.xml      
+  programming-models:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK 16
+        uses: actions/setup-java@v2
+        with:
+          java-version: "16"
+          distribution: "adopt"
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up Postgres(via Docker Compose)
+        run: |
+          cd programming-models
+          docker-compose up -d
+          sleep 10
+          docker ps -a
+      - name: Build with Maven(programming-models)
+        run: |
+          mvn -B -q clean package --file programming-models/pom.xml
+          mvn -B -q verify --file programming-models/pom.xml -Pit
