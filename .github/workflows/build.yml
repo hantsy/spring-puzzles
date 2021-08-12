@@ -50,6 +50,12 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: Set up RabbitMQ 16
+        run: |
+          cd amqp
+          docker-comose up -d
+          sleep 10
+          docker ps -a
       - name: Build with Maven
         run: |
           mvn -B -q clean package --file amqp/pom.xml
