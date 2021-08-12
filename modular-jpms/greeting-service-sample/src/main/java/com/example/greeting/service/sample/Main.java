@@ -6,8 +6,9 @@ import java.util.ServiceLoader;
 
 public class Main {
     public static void main(String[] args) {
-        ServiceLoader<GreetingService> greetingServices = ServiceLoader.load(GreetingService.class);
-        var service = greetingServices.findFirst().orElseThrow(() -> new RuntimeException("GreetingService was not found."));
+        var service = ServiceLoader.load(GreetingService.class)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("GreetingService was not found."));
 
         service.hello("Consumer Sample");
     }
