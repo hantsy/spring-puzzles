@@ -126,15 +126,16 @@ public class DemoApplication {
     //MessageConverter from spring-messaging module does not work with AmqpTemplate/RabbitTemplate.
     //Make sure it is org.springframework.amqp.support.converter.MessageConverter
     @Bean
-    MessageConverter jacksonMessageConverter(ObjectMapper objectMapper) {
+    MessageConverter messageConverter(ObjectMapper objectMapper) {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     // Use the spring-messaging general MappingJackson2MessageConverter in RabbitMessagingTemplate
     // to replace Spring AMQP specific Jackson2JsonMessageConverter
     @Bean
-    MappingJackson2MessageConverter jacksonMessageConverter() {
-        return new MappingJackson2MessageConverter();
+    MappingJackson2MessageConverter mappingJackson2MessageConverter() {
+        MappingJackson2MessageConverter messageConverter = new MappingJackson2MessageConverter();
+        return messageConverter;
     }
 
     // wraps MappingJackson2MessageConverter and RabbitTemplate
@@ -152,8 +153,8 @@ public class DemoApplication {
     SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             SimpleRabbitListenerContainerFactoryConfigurer configurer,
             ConnectionFactory connectionFactory,
-            MessageConverter jacksonMessageConverter,
-            MappingJackson2MessageConverter messageConverter) {
+            MessageConverter messageConverter,
+            MappingJackson2MessageConverter mappingJackson2MessageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         configurer.configure(factory, connectionFactory);
 
@@ -162,14 +163,14 @@ public class DemoApplication {
         // set it to use Spring AMQP(Rabbit) specific Jackson2JsonMessageConverter manually.
         // The code looks a little ugly.
         //factory.setMessageConverter(messageConverter);
-        factory.setMessageConverter(jacksonMessageConverter);
+        factory.setMessageConverter(messageConverter);
         return factory;
     }
 
     @Bean
-    public DefaultMessageHandlerMethodFactory messageHandlerMethodFactory(MappingJackson2MessageConverter messageConverter) {
+    public DefaultMessageHandlerMethodFactory messageHandlerMethodFactory(MappingJackson2MessageConverter mappingJackson2MessageConverter) {
         DefaultMessageHandlerMethodFactory factory = new DefaultMessageHandlerMethodFactory();
-        factory.setMessageConverter(messageConverter);
+        factory.setMessageConverter(mappingJackson2MessageConverter);
         return factory;
     }
 
