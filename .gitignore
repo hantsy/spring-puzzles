@@ -28,3 +28,9 @@ oradata
 hs_err_pid*
 
 .idea
+*.iml
+target/
+nbproject/
+.classpath
+.project
+.settings
