@@ -8,20 +8,29 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.annotation.RabbitListenerConfigurer;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.handler.annotation.support.DefaultMessageHandlerMethodFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
 import java.time.LocalDateTime;
 
+import static org.springframework.web.servlet.function.RequestPredicates.POST;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 import static org.springframework.web.servlet.function.ServerResponse.accepted;
 import static org.springframework.web.servlet.function.ServerResponse.ok;
@@ -114,7 +123,6 @@ public class DemoApplication {
         return BindingBuilder.bind(queueLogger).to(exchangeLogger);
     }
 
-
     //MessageConverter from spring-messaging module does not work with AmqpTemplate/RabbitTemplate.
     //Make sure it is org.springframework.amqp.support.converter.MessageConverter
     @Bean
@@ -122,16 +130,66 @@ public class DemoApplication {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
+    // Use the spring-messaging general MappingJackson2MessageConverter in RabbitMessagingTemplate
+    // to replace Spring AMQP specific Jackson2JsonMessageConverter
     @Bean
-    RouterFunction<ServerResponse> router(RabbitTemplate rabbitTemplate) {
+    MappingJackson2MessageConverter jacksonMessageConverter() {
+        return new MappingJackson2MessageConverter();
+    }
+
+    // wraps MappingJackson2MessageConverter and RabbitTemplate
+    @Bean
+    @Primary
+    RabbitMessagingTemplate rabbitMessagingTemplate(MappingJackson2MessageConverter messageConverter, RabbitTemplate rabbitTemplate) {
+        var messagingTemplate = new RabbitMessagingTemplate();
+        messagingTemplate.setMessageConverter(messageConverter);
+        messagingTemplate.setRabbitTemplate(rabbitTemplate);
+        return messagingTemplate;
+    }
+
+    @Bean
+    @Primary
+    SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
+            SimpleRabbitListenerContainerFactoryConfigurer configurer,
+            ConnectionFactory connectionFactory,
+            MessageConverter jacksonMessageConverter,
+            MappingJackson2MessageConverter messageConverter) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        configurer.configure(factory, connectionFactory);
+
+        // but the replyTo channel can not use the Spring messaging MappingJackson2MessageConverter.
+        // You have to customize the existing SimpleRabbitListenerContainerFactory bean and
+        // set it to use Spring AMQP(Rabbit) specific Jackson2JsonMessageConverter manually.
+        // The code looks a little ugly.
+        //factory.setMessageConverter(messageConverter);
+        factory.setMessageConverter(jacksonMessageConverter);
+        return factory;
+    }
+
+    @Bean
+    public DefaultMessageHandlerMethodFactory messageHandlerMethodFactory(MappingJackson2MessageConverter messageConverter) {
+        DefaultMessageHandlerMethodFactory factory = new DefaultMessageHandlerMethodFactory();
+        factory.setMessageConverter(messageConverter);
+        return factory;
+    }
+
+    @Bean
+    public RabbitListenerConfigurer rabbitListenerConfigurer(DefaultMessageHandlerMethodFactory factory) {
+        return registrar -> {
+            registrar.setMessageHandlerMethodFactory(factory);
+        };
+    }
+
+    @Bean
+    RouterFunction<ServerResponse> router(RabbitMessagingTemplate rabbitTemplate) {
         return route()
                 .GET("/ping",
                         req -> {
-                            String result = rabbitTemplate.convertSendAndReceiveAsType(
+                            String result = rabbitTemplate.convertSendAndReceive(
                                     DIRECT_EXCHANGE_PINGPONG,
                                     ROUTING_KEY_PINGPONG,
                                     "ping",
-                                    ParameterizedTypeReference.forType(String.class)
+                                    String.class
                             );
                             log.info("response from '/ping': {}", result);
                             return ok().body(result);
@@ -160,73 +218,6 @@ public class DemoApplication {
                 )
                 .build();
     }
-
-
-    // The following is a possible solution to use spring-messaging generic MessageConverter
-    // but the replyTo channel can not use this converter.
-    // You have to customize a SimpleRabbitListenerContainerFactory bean and
-    // set it to use Spring AMQP(Rabbit) specific Jackson2JsonMessageConverter manually.
-    // The code looks a little ugly.
-    /*@Bean
-    MappingJackson2MessageConverter jacksonMessageConverter() {
-        return new MappingJackson2MessageConverter();
-    }
-
-    @Bean
-    @Primary
-    RabbitMessagingTemplate rabbitMessagingTemplate(MappingJackson2MessageConverter messageConverter, RabbitTemplate rabbitTemplate) {
-        var messagingTemplate = new RabbitMessagingTemplate();
-        messagingTemplate.setMessageConverter(messageConverter);
-        messagingTemplate.setRabbitTemplate(rabbitTemplate);
-        return messagingTemplate;
-    }
-
-    @Bean
-    @Primary
-    SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
-            SimpleRabbitListenerContainerFactoryConfigurer configurer,
-            ConnectionFactory connectionFactory,
-            MappingJackson2MessageConverter messageConverter) {
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        configurer.configure(factory, connectionFactory);
-
-        //can not use spring-messaging MessageConverter
-        factory.setMessageConverter(new Jackson2JsonMessageConverter());
-        return factory;
-    }
-
-    @Bean
-    public DefaultMessageHandlerMethodFactory messageHandlerMethodFactory(MappingJackson2MessageConverter messageConverter) {
-        DefaultMessageHandlerMethodFactory factory = new DefaultMessageHandlerMethodFactory();
-        factory.setMessageConverter(messageConverter);
-        return factory;
-    }
-
-    @Bean
-    public RabbitListenerConfigurer rabbitListenerConfigurer(DefaultMessageHandlerMethodFactory factory) {
-        return registrar -> {
-            registrar.setMessageHandlerMethodFactory(factory);
-        };
-    }
-
-
-    @Bean
-    RouterFunction<ServerResponse> router(RabbitMessagingTemplate rabbitTemplate) {
-        return route(
-                POST("/"),
-                req -> ok()
-                        .body(
-                                rabbitTemplate.convertSendAndReceive(
-                                        TOPIC_EXCHANGE_NAME,
-                                        ROUTING_KEY,
-                                        req.body(SignupRequest.class),
-                                        SignupResult.class
-                                )
-                        )
-
-
-        );
-    }*/
 
 }
 
