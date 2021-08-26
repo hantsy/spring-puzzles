@@ -46,15 +46,15 @@ class PostsHandler {
         var id = UUID.fromString(req.pathVariable("id"));
         return Mono.zip((data) -> {
                     Post p = (Post) data[0];
-                    Post p2 = (Post) data[1];
+                    UpdatePostCommand p2 = (UpdatePostCommand) data[1];
                     p.setTitle(p2.getTitle());
                     p.setContent(p2.getContent());
                     return p;
                 },
                 this.posts.findById(id).convert().with(toMono()),
-                req.bodyToMono(Post.class)
+                req.bodyToMono(UpdatePostCommand.class)
             )
-            .cast(Post.class)
+            //.cast(Post.class)
             .flatMap(post -> this.posts.save(post).convert().with(toMono()))
             .flatMap(post -> ServerResponse.noContent().build());
     }
