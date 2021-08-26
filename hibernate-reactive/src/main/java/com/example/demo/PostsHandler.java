@@ -1,6 +1,5 @@
 package com.example.demo;
 
-import io.smallrye.mutiny.converters.uni.UniReactorConverters;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -10,7 +9,7 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 import java.util.UUID;
 
-import static io.smallrye.mutiny.converters.uni.UniReactorConverters.*;
+import static io.smallrye.mutiny.converters.uni.UniReactorConverters.toMono;
 
 @Component
 @RequiredArgsConstructor
@@ -45,8 +44,7 @@ class PostsHandler {
     public Mono<ServerResponse> update(ServerRequest req) {
 
         var id = UUID.fromString(req.pathVariable("id"));
-        return Mono
-            .zip((data) -> {
+        return Mono.zip((data) -> {
                     Post p = (Post) data[0];
                     Post p2 = (Post) data[1];
                     p.setTitle(p2.getTitle());

@@ -1,10 +1,11 @@
 name: hibernate-reactive
+on:
   push:
     paths:
       - "hibernate-reactive/**"
     branches: [master]
   pull_request:
-   paths:
+    paths:
       - "hibernate-reactive/**"
     branches: [master]
 
