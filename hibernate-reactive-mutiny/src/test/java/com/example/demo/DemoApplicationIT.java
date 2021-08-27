@@ -76,7 +76,7 @@ public class DemoApplicationIT {
             .jsonPath("$.title").isEqualTo(updatedTitle)
             .jsonPath("$.content").isEqualTo(updatedContent);
 
-        //delete , user role is forbidden
+        //delete
         client.delete().uri(savedPostUri)
             .exchange()
             .expectStatus().isNoContent();

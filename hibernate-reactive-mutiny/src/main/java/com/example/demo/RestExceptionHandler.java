@@ -12,7 +12,7 @@ import static org.springframework.http.ResponseEntity.status;
 
 @RestControllerAdvice
 @Slf4j
-public class PostExceptionHandler {
+public class RestExceptionHandler {
 
     @ExceptionHandler(PostNotFoundException.class)
     public ResponseEntity handlePostNotFoundException(PostNotFoundException exception) {
