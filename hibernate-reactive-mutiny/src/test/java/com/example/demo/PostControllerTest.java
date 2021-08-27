@@ -1,17 +1,13 @@
 package com.example.demo;
 
 import io.smallrye.mutiny.Uni;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.server.RouterFunction;
 
 import java.util.List;
 import java.util.UUID;
@@ -140,6 +136,5 @@ class PostControllerTest {
         verify(posts, times(1)).deleteById(any(UUID.class));
         verifyNoMoreInteractions(posts);
     }
-
 
 }
