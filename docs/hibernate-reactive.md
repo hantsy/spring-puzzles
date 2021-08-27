@@ -308,7 +308,7 @@ public RouterFunction<ServerResponse> routes(PostsHandler handler) {
 }
 ```
 
-Add a `DataInitializer` class to initialize some sample data.
+Add a `DataInitializer` component to initialize some sample data in the application startup stage.
 
 ```java
 @Component
@@ -342,7 +342,7 @@ public class DataInitializer implements ApplicationRunner {
 }
 ```
 
-Startup a Postgres database and then run the application.
+Startup a Postgres database instance in Docker container, and then run the application via Spring Boot Maven plugin.
 
 ```bash
 // start postgres database
@@ -352,7 +352,7 @@ docker compose up
 mvn clean spring-root:run
 ```
 
-Try to test http://localhost:8080/posts endpoints with `curl` command.
+After it is started, try to test http://localhost:8080/posts endpoints with `curl` command.
 
 ```
 # curl http://localhost:8080/posts
@@ -362,9 +362,9 @@ Try to test http://localhost:8080/posts endpoints with `curl` command.
 {"id":"0998578e-0553-480b-bbb7-e96fd402455f","title":"Hello Spring","content":"My first post of Spring","createdAt":"2021-08-26T22:37:02.076284"}
 ```
 
- Then let's go to the second solution. 
+Then let's go to the second solution. 
 
-Spring core uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, when using the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be recorgnized by Spring.
+Spring core uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, such as RxJava 2/3, JDK 9+ Flow, etc. When using the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be recognized by Spring framework.
 
 We'll create a new adapter to register Mutiny APIs.  
 
@@ -393,7 +393,7 @@ public class MutinyAdapter {
 
 ```
 
-Then create a `@RestController` class which invoke `PostRepository`  directly. No explicit conversions needed there, all methods return a `ResponseEntity` class or `Uni<ResponseEntity>`.
+Then create a `@RestController` bean which invoke `PostRepository`  directly. No explicit conversions needed there, all methods return a `ResponseEntity` class or a  `Uni<ResponseEntity>`.
 
 ```java
 @RestController
