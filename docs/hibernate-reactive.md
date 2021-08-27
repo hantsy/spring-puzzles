@@ -215,11 +215,11 @@ public class PostRepository {
 
 Till now, we have integrated Hibernate Reactive with Spring IOC container, next we will use the `PostRepositoy` to shake hands with the backend database. Let's begin to build the web layer.
 
-There are two different type asynchronous APIs available in Hibernate Reactive , one is based on Java 8 `CompletionStage`, another is  built on  [Smallrye Munity project](https://smallrye.io/smallrye-mutiny) . The later implements Reactive Streams specification, we use it in this post.
+There are two different type asynchronous APIs available in Hibernate Reactive, one is based on Java 8 `CompletionStage`, another is  built on  [Smallrye Munity project](https://smallrye.io/smallrye-mutiny) . The later implements Reactive Streams specification, we use it in this post.
 
-But unfortunately Spring does not have a built-in Smallrye Mutiny support as RxJava 2/3. 
+But unfortunately, Spring does not have a built-in Smallrye Mutiny support as RxJava 2/3. 
 
-There are some possible solutions can be used to overcome this barrier.
+There are some possible solutions that can be used to overcome this barrier.
 
 *  Convert the SmallRye APIs to Reactor APIs, then use the Reactor APIs directly in `RouterFunction` or `Controller` class.
 * Similar to the existing RxJava 1/2/3, JDK 9+ Flow support in Spring WebFlux, we can add Smallry Munity as another alternative of the official Reactor.
