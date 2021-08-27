@@ -213,20 +213,20 @@ public class PostRepository {
 
 ```
 
-Till now, we have integrated Hibernate Reactive with Spring IOC container, next we will use the `PostRepositoy` to shake hands with the backend database. Let's begin to build the web layer.
+Till now, we have integrated Hibernate Reactive with Spring IOC container, next we will use the `PostRepositoy` to shake hands with the backend database. Let's begin to build the web handling part.
 
-There are two different type asynchronous APIs available in Hibernate Reactive, one is based on Java 8 `CompletionStage`, another is  built on  [Smallrye Munity project](https://smallrye.io/smallrye-mutiny) . The later implements Reactive Streams specification, we use it in this post.
+There are two different types of asynchronous APIs available in Hibernate Reactive, one is based on Java 8 `CompletionStage`, another is  built on  [Smallrye Munity project](https://smallrye.io/smallrye-mutiny). The later fully implements the Reactive Streams specification, we use SmallRye Mutiny in this post.
 
-But unfortunately, Spring does not have a built-in Smallrye Mutiny support as RxJava 2/3. 
+But unfortunately, Spring does not include built-in Smallrye Mutiny support as RxJava 2/3, etc. 
 
-There are some possible solutions that can be used to overcome this barrier.
+There are some possible solutions that we can use to overcome this barrier.
 
-*  Convert the SmallRye APIs to Reactor APIs, then use the Reactor APIs directly in `RouterFunction` or `Controller` class.
-* Similar to the existing RxJava 1/2/3, JDK 9+ Flow support in Spring WebFlux, we can add Smallry Munity as another alternative of the official Reactor.
+* Convert the SmallRye APIs to Reactor APIs, then use the Reactor APIs directly in `RouterFunction` or `Controller` class.
+* Similar to the existing RxJava 1/2/3, JDK 9+ Flow support in Spring WebFlux, we can register Smallry Munity as another ReactiveStreams alternative of the official Reactor.
 
 Let's explore them one by one. 
 
-Firstly let's try to convert the Munity APIs to Reactor APIs.  Assume we will use  `RouterFunction` to handle the web request. 
+Firstly let's try to convert the Munity APIs to Reactor APIs. Assume we will use `RouterFunction` to handle the web request. 
 
 Add the following dependency to the project *pom.xml* file.
 
@@ -238,9 +238,9 @@ Add the following dependency to the project *pom.xml* file.
 </dependency>
 ```
 
-The `mutiny-reactor` provides some conversion utilities between SmallRye Mutiny and Reactor APIs.
+The `mutiny-reactor` provides some utilities that can be use to convert APIs between SmallRye Mutiny and Reactor.
 
-The following is an example of `PostsHandler`, in which we convert all Mutiny APIs to Reactor APIs.
+The following is an example of `PostsHandler`, where we centralize all web handlers in one class. In this class we convert all Mutiny APIs to Reactor APIs.
 
 ```java
 @Component
@@ -312,7 +312,7 @@ public RouterFunction<ServerResponse> routes(PostsHandler handler) {
 }
 ```
 
-Add a `DataInitializer` bean to initialize some sample data when the application is started.
+Add a `DataInitializer` bean to initialize some sample data when starting up the application.
 
 ```java
 @Component
@@ -346,7 +346,9 @@ public class DataInitializer implements ApplicationRunner {
 }
 ```
 
-Startup a Postgres database. There is a [*docker-compose.yml*](https://github.com/hantsy/spring-puzzles/blob/master/hibernate-reactive/docker-compose.yml) file available to start a Postgres instance in Docker container.  Then run the application via Spring Boot Maven plugin.
+Start up a Postgres database. There is a [*docker-compose.yml*](https://github.com/hantsy/spring-puzzles/blob/master/hibernate-reactive/docker-compose.yml) file available to start a Postgres instance in Docker container. 
+
+Then run the application via Spring Boot Maven plugin.
 
 ```bash
 // start postgres database
@@ -356,7 +358,7 @@ docker compose up
 mvn clean spring-root:run
 ```
 
-When the application is running, try to test http://localhost:8080/posts endpoints with `curl` command.
+When the application is running successfully, open your terminal, and try to test http://localhost:8080/posts endpoints with `curl` command.
 
 ```
 # curl http://localhost:8080/posts
@@ -368,9 +370,9 @@ When the application is running, try to test http://localhost:8080/posts endpoin
 
 Then let's discuss the second solution. 
 
-Spring uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, such as RxJava 2/3, JDK 9+ Flow, etc. When using the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be processed by Spring framework.
+Spring interally uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, such as RxJava 2/3, JDK 9+ Flow, etc. When searialzing the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be processed by Spring framework.
 
-We'll create a new adapter to register Mutiny APIs.  
+We'll create a new adapter to register Mutiny APIs as expected.  
 
 ```java
 @Component
@@ -397,7 +399,7 @@ public class MutinyAdapter {
 
 ```
 
-Then create a `@RestController` bean which invoke `PostRepository`  directly. As you see,  all methods return a `ResponseEntity` class or a  `Uni<ResponseEntity>`,  no need explicit conversion work there.
+Then create a `@RestController` bean which invokes `PostRepository`  directly. As you see, all methods return a `ResponseEntity` type or a  `Uni<ResponseEntity>` type directly,  no need explicit conversion work there.
 
 ```java
 @RestController
