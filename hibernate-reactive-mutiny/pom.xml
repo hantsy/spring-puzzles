@@ -15,11 +15,9 @@
 
     <properties>
         <java.version>16</java.version>
-
-        <mutiny-vertx.version>2.12.0</mutiny-vertx.version>
+        
         <hibernate-reactive.version>1.0.0.CR9</hibernate-reactive.version>
         <vertx-pg-client.version>4.1.2</vertx-pg-client.version>
-        <mutiny-reactor.version>1.0.0</mutiny-reactor.version>
 
         <!-- maven plugins -->
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -36,32 +34,11 @@
         </dependency>
 
         <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>mutiny-reactor</artifactId>
-            <version>${mutiny-reactor.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
             <version>${vertx-pg-client.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-mutiny-vertx-core</artifactId>
-            <version>${mutiny-vertx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-mutiny-vertx-web</artifactId>
-            <version>${mutiny-vertx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-mutiny-vertx-pg-client</artifactId>
-            <version>${mutiny-vertx.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.hibernate.reactive</groupId>
             <artifactId>hibernate-reactive-core</artifactId>
