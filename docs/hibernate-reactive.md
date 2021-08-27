@@ -1,15 +1,15 @@
 # Integrating Hibernate Reactive with Spring
 
-Hibernate started a subproject - Hibernate Reactive for Reactive Streams support, but at the moment Spring still did not add Hibernate Reactive support, but the integration work is not complex. In this post, we will attempt to integrate the latest Hibernate Reactive with  Spring framework.
+Hibernate started a subproject - Hibernate Reactive for Reactive Streams support, but at the moment when I wrote this post, Spring still did not embrace Hibernate Reactive. The good news is the integration work is not complex. In this post, we will attempt to integrate the latest Hibernate Reactive with Spring framework.
 
-In the former post [Integrating Vertx with Spring framework](https://itnext.io/integrating-vertx-application-with-spring-framework-fb8fca81a357) and [the further post](https://itnext.io/building-a-vertx-application-with-smallrye-mutiny-bindings-spring-and-hibernate-reactive-5cf10b57983a) , we have integrated Hibernate Reactive with Spring IOC container, but in those the posts, the web handling is done by Vertx. In this post, we will use the existing Spring WebFlux instead.
+In the former post [Integrating Vertx with Spring framework](https://itnext.io/integrating-vertx-application-with-spring-framework-fb8fca81a357) and [the further post](https://itnext.io/building-a-vertx-application-with-smallrye-mutiny-bindings-spring-and-hibernate-reactive-5cf10b57983a) , we have integrated Hibernate Reactive with Spring IOC container, but in those the posts, the web handling is done by Vertx Web. In this post, we will use the existing Spring WebFlux instead.
 
 Open your browser and navigate to https://start.spring.io, and generate a Spring project skeleton with the following  dependencies,
 
 * *WebFlux*
 *  *Lombok*
 
-Extract the downloaded files, and imported into your IDE. 
+Extract the downloaded files into disc, and import the project into your IDE. 
 
 Open the project *pom.xml* file, add the following dependencies.
 
@@ -36,7 +36,7 @@ Open the project *pom.xml* file, add the following dependencies.
 In the above the codes:
 
 * The `vertx-pg-client` is the Postgres reactive driver which is required by Hibernate Reactive.
-* The `hibernate-reactive-core` is the core of Hibernate Reactive.
+* The `hibernate-reactive-core` is the core dependency of Hibernate Reactive.
 *  Similar to the general Hibernate/JPA support, `hibernate-jpamodelgen` is used to generate entity metadata classes from the `@Entity` classes.
 
 Add a *persistence.xml* to *src/main/resources/META-INF* folder.
@@ -84,9 +84,9 @@ Add a *persistence.xml* to *src/main/resources/META-INF* folder.
 </persistence>
 ```
 
-Note the `provider` must use the `ReactivePersistenceProvider` which is provided in the  Hibernate Reactive. And you have to add all your entity classes in this *persistence.xml* file.
+Note the `provider` must use the `ReactivePersistenceProvider` class which is provided in the new Hibernate Reactive. And you have to add all your entity classes in this *persistence.xml* file.
 
-Then declare a  `Mutiny.SessionFactory` bean.
+Then declare a  `Mutiny.SessionFactory` bean. The `blogPU` is the persistence unit name configured in the *persistence.xml* file.
 
 ```java
 @Bean
@@ -215,14 +215,18 @@ public class PostRepository {
 
 Till now, we have integrated Hibernate Reactive with Spring IOC container, next we will use the `PostRepositoy` to shake hands with the backend database. Let's begin to build the web layer.
 
-Hibernate Reactive provides two different asynchronous APIs, one is based on Java 8 `CompletionStage`, another is  based on the [Smallrye Munity project](https://smallrye.io/smallrye-mutiny) which implements Reactive Streams specification. We used the later in this post.
+There are two different type asynchronous APIs available in Hibernate Reactive , one is based on Java 8 `CompletionStage`, another is  built on  [Smallrye Munity project](https://smallrye.io/smallrye-mutiny) . The later implements Reactive Streams specification, we use it in this post.
 
-But Spring does not have a built-in Smallrye Mutiny support, there are some possible solutions to overcome this barrier.
+But unfortunately Spring does not have a built-in Smallrye Mutiny support as RxJava 2/3. 
 
-*  Convert the Smallrye APIs to Reactor APIs, then use it as general Reactor in `RouterFunction` or `Controller` class.
+There are some possible solutions can be used to overcome this barrier.
+
+*  Convert the SmallRye APIs to Reactor APIs, then use the Reactor APIs directly in `RouterFunction` or `Controller` class.
 * Similar to the existing RxJava 1/2/3, JDK 9+ Flow support in Spring WebFlux, we can add Smallry Munity as another alternative of the official Reactor.
 
-Let's explore them one by one. Firstly let's try to convert the Munity APIs to Reactor APIs.  Assume we will use  `RouterFunction` to handle the web request. 
+Let's explore them one by one. 
+
+Firstly let's try to convert the Munity APIs to Reactor APIs.  Assume we will use  `RouterFunction` to handle the web request. 
 
 Add the following dependency to the project *pom.xml* file.
 
@@ -234,7 +238,7 @@ Add the following dependency to the project *pom.xml* file.
 </dependency>
 ```
 
-The `mutiny-reactor` provides some  conversion utilities between SmallRey Mutiny and Reactor APIs.
+The `mutiny-reactor` provides some conversion utilities between SmallRye Mutiny and Reactor APIs.
 
 The following is an example of `PostsHandler`, in which we convert all Mutiny APIs to Reactor APIs.
 
@@ -295,7 +299,7 @@ class PostsHandler {
 }
 ```
 
-Then apply them in a `RouterFunction` bean.
+Then assemble the web handlers in a `RouterFunction` bean.
 
 ```java
 @Bean
@@ -308,7 +312,7 @@ public RouterFunction<ServerResponse> routes(PostsHandler handler) {
 }
 ```
 
-Add a `DataInitializer` component to initialize some sample data in the application startup stage.
+Add a `DataInitializer` bean to initialize some sample data when the application is started.
 
 ```java
 @Component
@@ -342,7 +346,7 @@ public class DataInitializer implements ApplicationRunner {
 }
 ```
 
-Startup a Postgres database instance in Docker container, and then run the application via Spring Boot Maven plugin.
+Startup a Postgres database. There is a [*docker-compose.yml*](https://github.com/hantsy/spring-puzzles/blob/master/hibernate-reactive/docker-compose.yml) file available to start a Postgres instance in Docker container.  Then run the application via Spring Boot Maven plugin.
 
 ```bash
 // start postgres database
@@ -352,7 +356,7 @@ docker compose up
 mvn clean spring-root:run
 ```
 
-After it is started, try to test http://localhost:8080/posts endpoints with `curl` command.
+When the application is running, try to test http://localhost:8080/posts endpoints with `curl` command.
 
 ```
 # curl http://localhost:8080/posts
@@ -362,9 +366,9 @@ After it is started, try to test http://localhost:8080/posts endpoints with `cur
 {"id":"0998578e-0553-480b-bbb7-e96fd402455f","title":"Hello Spring","content":"My first post of Spring","createdAt":"2021-08-26T22:37:02.076284"}
 ```
 
-Then let's go to the second solution. 
+Then let's discuss the second solution. 
 
-Spring core uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, such as RxJava 2/3, JDK 9+ Flow, etc. When using the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be recognized by Spring framework.
+Spring uses a `ReactiveAdapterRegistry` to register all reactive streams implementations, such as RxJava 2/3, JDK 9+ Flow, etc. When using the implementer's specific APIs, it will look up the registry and convert it into the standard ReactiveStreams APIs which can be processed by Spring framework.
 
 We'll create a new adapter to register Mutiny APIs.  
 
@@ -393,7 +397,7 @@ public class MutinyAdapter {
 
 ```
 
-Then create a `@RestController` bean which invoke `PostRepository`  directly. No explicit conversions needed there, all methods return a `ResponseEntity` class or a  `Uni<ResponseEntity>`.
+Then create a `@RestController` bean which invoke `PostRepository`  directly. As you see,  all methods return a `ResponseEntity` class or a  `Uni<ResponseEntity>`,  no need explicit conversion work there.
 
 ```java
 @RestController
@@ -449,7 +453,7 @@ class PostController {
 }
 ```
 
-Run this application again, you will get the same result as the former project.
+Run this application again, you will get the same result as the former solution.
 
-Get the source codes from my GitHub: [hibernate-reactive](https://github.com/hantsy/spring-puzzles/tree/master/hibernate-reactive) and [hibernate-reactive-mutiny](https://github.com/hantsy/spring-puzzles/tree/master/hibernate-reactive-mutiny).
+Get the source codes of this post from my GitHub, they are available in two seperate projects, [hibernate-reactive](https://github.com/hantsy/spring-puzzles/tree/master/hibernate-reactive) and [hibernate-reactive-mutiny](https://github.com/hantsy/spring-puzzles/tree/master/hibernate-reactive-mutiny).
 
