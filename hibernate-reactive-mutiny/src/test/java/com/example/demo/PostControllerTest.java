@@ -50,4 +50,96 @@ class PostControllerTest {
         verifyNoMoreInteractions(posts);
     }
 
+    @Test
+    public void getPostById() {
+        when(posts.findById(any(UUID.class))).thenReturn(
+            Uni.createFrom().item(
+                Post.builder().id(UUID.randomUUID()).title("my title").content("my content").build()
+            )
+        );
+
+        this.client.get().uri("/posts/{id}", UUID.randomUUID())
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().is2xxSuccessful()
+            .expectBody()
+            .jsonPath("$.title").isEqualTo("my title");
+
+        verify(posts, times(1)).findById(any(UUID.class));
+        verifyNoMoreInteractions(posts);
+    }
+
+    @Test
+    public void getPostById_notFound() {
+        when(posts.findById(any(UUID.class))).thenThrow(new PostNotFoundException(UUID.randomUUID()));
+
+        this.client.get().uri("/posts/{id}", UUID.randomUUID())
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().is4xxClientError();
+
+        verify(posts, times(1)).findById(any(UUID.class));
+        verifyNoMoreInteractions(posts);
+    }
+
+    @Test
+    public void createPost() {
+        when(posts.save(any(Post.class))).thenReturn(
+            Uni.createFrom().item(
+                Post.builder().id(UUID.randomUUID()).title("my title").content("my content").build()
+            )
+        );
+
+        this.client.post().uri("/posts")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(CreatePostCommand.of("my title", "my content"))
+            .exchange()
+            .expectStatus().is2xxSuccessful()
+            .expectHeader().exists("Location");
+
+
+        verify(posts, times(1)).save(any(Post.class));
+        verifyNoMoreInteractions(posts);
+    }
+
+    @Test
+    public void updatePost() {
+        when(posts.findById(any(UUID.class))).thenReturn(
+            Uni.createFrom().item(
+                Post.builder().id(UUID.randomUUID()).title("my title").content("my content").build()
+            )
+        );
+
+        when(posts.save(any(Post.class))).thenReturn(
+            Uni.createFrom().item(
+                Post.builder().id(UUID.randomUUID()).title("my title").content("my content").build()
+            )
+        );
+
+        this.client.put().uri("/posts/{id}", UUID.randomUUID())
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(UpdatePostCommand.of("my title", "my content"))
+            .exchange()
+            .expectStatus().is2xxSuccessful();
+
+        verify(posts, times(1)).findById(any(UUID.class));
+        verify(posts, times(1)).save(any(Post.class));
+        verifyNoMoreInteractions(posts);
+    }
+
+    @Test
+    public void deletePostById() {
+        when(posts.deleteById(any(UUID.class))).thenReturn(
+            Uni.createFrom().item(1)
+        );
+
+        this.client.delete().uri("/posts/{id}", UUID.randomUUID())
+            .exchange()
+            .expectStatus().is2xxSuccessful();
+
+        verify(posts, times(1)).deleteById(any(UUID.class));
+        verifyNoMoreInteractions(posts);
+    }
+
+
 }
