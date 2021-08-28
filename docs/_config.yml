@@ -1,4 +1,3 @@
 theme: jekyll-theme-cayman
 title: Spring Puzzles 
-description: Tips of using Spring R2dbc and Spring Data R2dbc
- Code samples for tips, problem-resolving methods, architecture patterns in Spring. 
+description: Code samples for tips, problem-resolving methods, architecture patterns in Spring application development
