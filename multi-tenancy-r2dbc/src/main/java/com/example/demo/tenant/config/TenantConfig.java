@@ -3,6 +3,7 @@ package com.example.demo.tenant.config;
 import com.example.demo.master.TenantConfigRepository;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +15,6 @@ import org.springframework.data.r2dbc.core.DefaultReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
-import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 @Configuration
 @EnableR2dbcRepositories(basePackages = "com.example.demo.tenant.repository", entityOperationsRef = "tenantEntityTemplate")
+@Slf4j
 public class TenantConfig {
 
     @Autowired
@@ -39,6 +40,28 @@ public class TenantConfig {
 
     @PostConstruct
     public void initializeTenantDataSources() {
+//        configRepository.findAll(Sort.by("tenantId"))
+//                .doOnNext(
+//                        data -> {
+//                            var tenantId = data.getTenantId();
+//                            var url = data.getUrl();
+//                            tenantConnectionFactoriesMap.putIfAbsent(tenantId, ConnectionFactories.get(url));
+//                        }
+//                )
+//                .then()
+//                .thenMany(Flux.fromIterable(this.tenantConnectionFactoriesMap.keySet()))
+//                .flatMap(tenantId -> {
+//                    var scripts = new Resource[]{
+//                            new ClassPathResource("scripts/" + tenantId + "/schema.sql"),
+//                            new ClassPathResource("scripts/" + tenantId + "/data.sql")
+//                    };
+//                    return new ResourceDatabasePopulator(scripts)
+//                            .populate((ConnectionFactory) this.tenantConnectionFactoriesMap.get(tenantId));
+//                })
+//                .subscribe(
+//                        data -> log.debug("data: {}", data),
+//                        error -> log.error("error:" + error)
+//                );
         this.initializeTenantConnectionFactoriesMap();
         this.initializeTenantSampleData();
     }
@@ -70,7 +93,6 @@ public class TenantConfig {
 
     }
 
-
     @Bean()
     @Qualifier("tenantConnectionFactory")
     public ConnectionFactory tenantConnectionFactory() {
@@ -79,7 +101,6 @@ public class TenantConfig {
         tenantConnectionFactory.setTargetConnectionFactories(tenantConnectionFactoriesMap);
         return tenantConnectionFactory;
     }
-
 
     @Bean
     public R2dbcEntityOperations tenantEntityTemplate(@Qualifier("tenantConnectionFactory") ConnectionFactory connectionFactory) {
