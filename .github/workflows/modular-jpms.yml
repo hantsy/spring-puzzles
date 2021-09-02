@@ -5,6 +5,8 @@ on:
       - "modular-jpms/**"
     branches: [master]
   pull_request:
+    paths:
+      - "modular-jpms/**"
     branches: [master]
 
 jobs:
