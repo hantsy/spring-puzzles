@@ -33,7 +33,7 @@ jobs:
       - name: Build with Maven
         run: |
           mvn -B -q clean package spring-boot:run --file springfox-gateway/customers/pom.xml &
-          mvn -B -q clean pacakge spring-boot:run --file springfox-gateway/orders/pom.xml &
+          mvn -B -q clean package spring-boot:run --file springfox-gateway/orders/pom.xml &
           sleep 5
           mvn -B -q clean verify --file springfox-gateway/gateway/pom.xml
      
