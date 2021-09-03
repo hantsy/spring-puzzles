@@ -1,0 +1,30 @@
+logging:
+  level:
+    web: DEBUG
+    root: INFO
+
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: customers
+          uri: http://localhost:8001
+          predicates:
+            - Path=/customers/**
+          filters:
+            - RewritePath=/customers/(?<segment>.*), /$\{segment}
+        - id: orders
+          uri: http://localhost:8002
+          predicates:
+            - Path=/orders/**
+          filters:
+            - RewritePath=/orders/(?<segment>.*), /$\{segment}
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
