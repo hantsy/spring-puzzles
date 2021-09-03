@@ -70,12 +70,15 @@ class SwaggerConfig {
             SwaggerResource customersResource = new SwaggerResource();
             customersResource.setName("Customers Endpoints");
             customersResource.setSwaggerVersion("3.0");
+            // can not set the rewrite prefix in the SwaggerResource execution.
             customersResource.setUrl("/customers/v3/api-docs");
+            //customersResource.setUrl("http://localhost:8001/v3/api-docs");
 
             SwaggerResource ordersResource = new SwaggerResource();
             ordersResource.setName("Orders Endpoints");
             ordersResource.setSwaggerVersion("3.0");
             ordersResource.setUrl("/orders/v3/api-docs");
+            //ordersResource.setUrl("http://localhost:8002/v3/api-docs");
 
             List<SwaggerResource> resources = new ArrayList<>(defaultResourcesProvider.get());
             resources.add(customersResource);
