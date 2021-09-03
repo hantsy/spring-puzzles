@@ -1,6 +1,5 @@
 package com.example.demo;
 
-import com.example.demo.interfaces.dto.CourseDto;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -27,14 +26,18 @@ class DemoApplicationIT {//does not depend on Spring IOC
     }
 
     @Test
-    @DisplayName(" GET '/courses' should return status 200")
+    @DisplayName(" GET '/customers' should return status 200")
     void getAll() {
-        var resEntity = restTemplate.getForEntity("/courses", CourseDto[].class);
+        var resEntity = restTemplate.getForEntity("/customers", CustomerDto[].class);
         assertThat(resEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-        var courses = resEntity.getBody();
-        log.info("All courses: {}", courses);
-        assertThat(courses.length).isGreaterThan(0);
+        var customerDtos = resEntity.getBody();
+        log.info("All courses: {}", customerDtos);
+        assertThat(customerDtos.length).isEqualTo(2);
+        assertThat(customerDtos).anyMatch(c -> c.name().equals("Hantsy"));
     }
 
+}
+
+record CustomerDto(String name) {
 }
