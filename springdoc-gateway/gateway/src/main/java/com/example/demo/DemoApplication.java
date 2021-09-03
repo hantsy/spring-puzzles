@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springdoc.core.GroupedOpenApi;
+import org.springdoc.core.SwaggerUiConfigParameters;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -44,10 +45,21 @@ class GreetingController {
 class SpringDocConfig {
 }
 
+//@Bean
+//public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion) {
+//    return new OpenAPI()
+//            .components(new Components())
+//            .info(new io.swagger.v3.oas.models.info.Info().title("Gateway API").version(appVersion)
+//                    .license(new License().name("Apache 2.0").url("http://springdoc.org")));
+//}
+
 @Configuration
 class SwaggerConfig {
+
     @Bean
-    public List<GroupedOpenApi> apis() {
+    public List<GroupedOpenApi> apis(SwaggerUiConfigParameters swaggerUiConfigParameters) {
+        swaggerUiConfigParameters.addGroup("orders");
+        swaggerUiConfigParameters.addGroup("customers");
         return List.of(
                 GroupedOpenApi.builder().group("orders").pathsToMatch("/orders/**").build(),
                 GroupedOpenApi.builder().group("customers").pathsToMatch("/customers/**").build()
