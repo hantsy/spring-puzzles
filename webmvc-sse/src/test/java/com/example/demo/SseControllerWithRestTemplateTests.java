@@ -11,7 +11,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
 
 import java.io.BufferedReader;
@@ -38,7 +37,7 @@ public class SseControllerWithRestTemplateTests {
     @BeforeEach
     public void setup() {
         RestTemplateBuilder restTemplateBuilder = builder.rootUri("http://localhost:" + port)
-                .requestFactory(OkHttp3ClientHttpRequestFactory::new)// use OKHttp instead the default simpleclient
+                .requestFactory(OkHttp3ClientHttpRequestFactory::new)// use OKHttp instead of the default JDK client
                 .setReadTimeout(Duration.ofMillis(5000L))
                 .setConnectTimeout(Duration.ofMillis(1000L));
         this.restTemplate = new TestRestTemplate(restTemplateBuilder);

@@ -9,27 +9,28 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.ClientCodecConfigurer;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Slf4j
-public class SseControllerWithWebClientTests {
+public class SseControllerWithWebTestClientTests {
 
     @LocalServerPort
     private int port;
 
-    private WebClient webClient;
+    private WebTestClient webClient;
 
     @BeforeEach
     public void setup() {
-        this.webClient = WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector())
-                .codecs(ClientCodecConfigurer::defaultCodecs)
-                .exchangeStrategies(ExchangeStrategies.withDefaults())
+        this.webClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:" + port)
                 .build();
     }
@@ -40,11 +41,14 @@ public class SseControllerWithWebClientTests {
 
         this.webClient.get().uri("events")
                 .accept(MediaType.TEXT_EVENT_STREAM)
-                .exchangeToFlux(clientResponse -> clientResponse.bodyToFlux(TextMessage.class))
-                .as(StepVerifier::create)
-                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 1"))
-                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 2"))
-                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 3"))
-                .verifyComplete();
+                .exchange()
+                .expectBodyList(TextMessage.class)
+                .value(messages -> assertThat(messages).containsAll(
+                        List.of(
+                                new TextMessage("message 1"),
+                                new TextMessage("message 2"),
+                                new TextMessage("message 3")
+                        )
+                ));
     }
 }
