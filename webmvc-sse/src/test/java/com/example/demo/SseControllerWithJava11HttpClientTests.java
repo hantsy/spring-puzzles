@@ -29,6 +29,7 @@ public class SseControllerWithJava11HttpClientTests {
         var client = HttpClient.newBuilder().connectTimeout(Duration.ofMillis(5000L)).build();
         var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/events"))
                 .header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE)
+                .GET()
                 .build();
 
         var messages = client.send(request, HttpResponse.BodyHandlers.ofLines()).body()
