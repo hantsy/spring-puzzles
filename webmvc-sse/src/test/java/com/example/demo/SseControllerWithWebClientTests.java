@@ -45,6 +45,7 @@ public class SseControllerWithWebClientTests {
                 .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 1"))
                 .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 2"))
                 .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 3"))
-                .verifyComplete();
+                .thenCancel()
+                .verify();
     }
 }

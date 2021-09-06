@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
+import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,18 +32,18 @@ public class SseControllerWithMockMvcWebTestClientTests {
     @SneakyThrows
     @Test
     public void testSseEndpoints() {
-
-        this.webClient.get().uri("events")
+        FluxExchangeResult<TextMessage> result = this.webClient.get().uri("/events")
                 .accept(MediaType.TEXT_EVENT_STREAM)
                 .exchange()
+                .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.TEXT_EVENT_STREAM)
-                .expectBodyList(TextMessage.class)
-                .value(messages -> assertThat(messages).containsAll(
-                        List.of(
-                                new TextMessage("message 1"),
-                                new TextMessage("message 2"),
-                                new TextMessage("message 3")
-                        )
-                ));
+                .returnResult(TextMessage.class);
+
+        StepVerifier.create(result.getResponseBody())
+                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 1"))
+                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 2"))
+                .consumeNextWith(it -> assertThat(it.body()).isEqualTo("message 3"))
+                .thenCancel()
+                .verify();
     }
 }
