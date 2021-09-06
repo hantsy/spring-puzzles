@@ -61,7 +61,7 @@ class SseController {
         // if the emitter does not call `complete`, will fail the tests using `MockMvc`.
         // but in the real world application, we could always keep the sse connection open
         // till the client close it or some exceptions occur.
-        sseEmitter.complete();
+        // sseEmitter.complete();
         return sseEmitter;
     }
 

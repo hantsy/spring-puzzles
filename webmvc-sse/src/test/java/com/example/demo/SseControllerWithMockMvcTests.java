@@ -3,6 +3,7 @@ package com.example.demo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,7 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @Slf4j
-public class SseControllerTests {
+@Disabled
+//see: https://github.com/spring-projects/spring-framework/issues/21408
+public class SseControllerWithMockMvcTests {
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Autowired
