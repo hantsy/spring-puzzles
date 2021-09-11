@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+// Spring 5.3.10 adds SmallRye Mutiny support officially.
+// see: https://github.com/spring-projects/spring-framework/pull/27331
 @Component
 @RequiredArgsConstructor
 @Slf4j
