@@ -48,7 +48,7 @@ public class Course implements Serializable {
     private String title;
 
     private String description;
-        
+
     // Be careful to use `cascade` in a many to many relation.
     // @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, mappedBy = "courses")
     @ManyToMany(mappedBy = "courses")
@@ -75,10 +75,11 @@ public class Course implements Serializable {
     //requires open sessions to sync the changes.
     public synchronized void removeStudent(Student student) {
         if (this.getStudents().contains(student)) {
-            student.getCourses().remove(this);
-            this.students.remove(student);
-        } else throw new StudentNeverRegisteredCourseException(student.getId(), this.id);
-
+            student.getCourses().removeIf( c-> Objects.equals(c.getId(), this.getId()));
+            this.students.removeIf(s -> Objects.equals(s.getId(), student.getId()));
+        } else {
+            throw new StudentNeverRegisteredCourseException(student.getId(), this.id);
+        }
     }
 
     @Override
