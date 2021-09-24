@@ -48,8 +48,10 @@ public class Course implements Serializable {
     private String title;
 
     private String description;
-
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, mappedBy = "courses")
+        
+    // Be careful to use `cascade` in a many to many relation.
+    // @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.PERSIST}, mappedBy = "courses")
+    @ManyToMany(mappedBy = "courses")
     @Builder.Default
     @Size(max = 50)
     Set<Student> students = new HashSet<>();
