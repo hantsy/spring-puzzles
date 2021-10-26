@@ -1,14 +1,23 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.server.WebExceptionHandler;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,10 +34,20 @@ class DemoApplicationTests {
     @Autowired
     RouterFunction routerFunction;
 
+    @Autowired
+    WebExceptionHandler restExceptionHandler;
+
+//    @Autowired
+//    ApplicationContext applicationContext;
+
     @BeforeEach
     public void setup() {
         this.client = WebTestClient.bindToRouterFunction(routerFunction)
+            .handlerStrategies(HandlerStrategies.builder().exceptionHandler(restExceptionHandler).build())
             .build();
+
+        // or build on global application context.
+        //this.client = WebTestClient.bindToApplicationContext(applicationContext).build();
     }
 
     @Test
@@ -73,6 +92,7 @@ class DemoApplicationTests {
     }
 
     @Test
+    //@Disabled
     public void getPostById_notFound() {
         when(posts.findById(any(UUID.class))).thenReturn(Uni.createFrom().failure(new PostNotFoundException(UUID.randomUUID())));
 
@@ -143,6 +163,5 @@ class DemoApplicationTests {
         verify(posts, times(1)).deleteById(any(UUID.class));
         verifyNoMoreInteractions(posts);
     }
-
 
 }

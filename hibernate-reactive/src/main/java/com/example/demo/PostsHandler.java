@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -13,6 +14,7 @@ import static io.smallrye.mutiny.converters.uni.UniReactorConverters.toMono;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 class PostsHandler {
 
     private final PostRepository posts;
@@ -37,8 +39,9 @@ class PostsHandler {
     public Mono<ServerResponse> get(ServerRequest req) {
         var id = UUID.fromString(req.pathVariable("id"));
         return this.posts.findById(id).convert().with(toMono())
+            .doOnError(error -> log.error("Got error: "+ error.getMessage()))
             .flatMap(post -> ServerResponse.ok().body(Mono.just(post), Post.class));
-            //.switchIfEmpty(Mono.error(new PostNotFoundException(id)));
+        //.switchIfEmpty(Mono.error(new PostNotFoundException(id)));
     }
 
     public Mono<ServerResponse> update(ServerRequest req) {

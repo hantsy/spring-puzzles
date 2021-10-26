@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @Component
-@Order(-2)
+@Order(-100)
 @Slf4j
 @RequiredArgsConstructor
 public class RestExceptionHandler implements WebExceptionHandler {
@@ -25,6 +25,7 @@ public class RestExceptionHandler implements WebExceptionHandler {
     @SneakyThrows
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        log.debug("handling exceptions: {}", ex.getClass().getSimpleName());
         if (ex instanceof PostNotFoundException) {
             exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
 
