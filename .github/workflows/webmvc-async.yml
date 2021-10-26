@@ -22,11 +22,11 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: Set up JDK 16
+      - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: "16"
-          distribution: "adopt"
+          java-version: "17"
+          distribution: "zulu"
       - name: Cache Maven repository
         uses: actions/cache@v2
         with:
@@ -52,11 +52,11 @@ jobs:
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: Set up JDK 16
+      - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: "16"
-          distribution: "adopt"
+          java-version: "17"
+          distribution: "zulu"
 
       - name: Cache Maven repository
         uses: actions/cache@v2
