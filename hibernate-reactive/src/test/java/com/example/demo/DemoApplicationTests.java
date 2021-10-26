@@ -74,7 +74,7 @@ class DemoApplicationTests {
 
     @Test
     public void getPostById_notFound() {
-        when(posts.findById(any(UUID.class))).thenThrow(new PostNotFoundException(UUID.randomUUID()));
+        when(posts.findById(any(UUID.class))).thenReturn(Uni.createFrom().failure(new PostNotFoundException(UUID.randomUUID())));
 
         this.client.get().uri("/posts/{id}", UUID.randomUUID())
             .accept(MediaType.APPLICATION_JSON)

@@ -37,8 +37,8 @@ class PostsHandler {
     public Mono<ServerResponse> get(ServerRequest req) {
         var id = UUID.fromString(req.pathVariable("id"));
         return this.posts.findById(id).convert().with(toMono())
-            .flatMap(post -> ServerResponse.ok().body(Mono.just(post), Post.class))
-            .switchIfEmpty(ServerResponse.notFound().build());
+            .flatMap(post -> ServerResponse.ok().body(Mono.just(post), Post.class));
+            //.switchIfEmpty(Mono.error(new PostNotFoundException(id)));
     }
 
     public Mono<ServerResponse> update(ServerRequest req) {
