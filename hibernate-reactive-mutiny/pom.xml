@@ -39,6 +39,13 @@
             <artifactId>vertx-pg-client</artifactId>
             <version>${vertx-pg-client.version}</version>
         </dependency>
+        <!-- see: https://github.com/eclipse-vertx/vertx-sql-client/issues/1059 -->
+        <dependency>
+            <groupId>com.ongres.scram</groupId>
+            <artifactId>client</artifactId>
+            <version>2.1</version>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>org.hibernate.reactive</groupId>
