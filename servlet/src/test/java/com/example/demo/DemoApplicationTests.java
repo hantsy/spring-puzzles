@@ -55,6 +55,12 @@ class DemoApplicationTests {
         var greeting = servletContext.getAttribute("greeting");
         log.debug("attribute greeting in servlet context: {}", greeting);
         assertThat(greeting).isNotNull();
+
+        var hello = servletContext.getInitParameter("hello");
+        assertThat(hello).isEqualTo("world");
+
+        var to = servletContext.getInitParameter("to");
+        assertThat(to).isEqualTo("ServletContext");
     }
 
 }
