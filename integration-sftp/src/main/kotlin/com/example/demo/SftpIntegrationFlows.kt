@@ -51,12 +51,7 @@ class SftpIntegrationFlows(private val sftpProperties: SftpProperties) {
                     .autoStartup(true)
                     .poller(Pollers.fixedDelay(5000))
             }
-            .handle { m: Message<*> ->
-                run {
-                    log.debug("payload: ${m.payload}")
-                    val file = m.payload as File
-                }
-            }
+            .handle { m: Message<*> -> log.debug("payload: ${m.payload}") }
             .get()
     }
 

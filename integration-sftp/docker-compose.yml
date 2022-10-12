@@ -8,6 +8,6 @@ services:
     image: emberstack/sftp
     volumes:
       - ./data/sftp.json:/app/config/sftp.json:ro
-      - ./data/sftptest:/home/demo/sftp
+      - ./data/sftpdata:/home/demo/sftp
     ports:
       - "2222:22"

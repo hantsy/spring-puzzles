@@ -66,7 +66,7 @@ class SftpIntegrationFlowsTest {
 
     @BeforeEach
     fun setup() {
-        Files.walk(Paths.get("./data/sftptest")).filter { it.isRegularFile() }
+        Files.walk(Paths.get("./data/sftpdata")).filter { it.isRegularFile() }
             .map { it.toFile() }
             .forEach { it.delete() }
     }
@@ -77,7 +77,7 @@ class SftpIntegrationFlowsTest {
         log.debug("uploading file: $test, ${test.exists()}")
         gateway.upload(test)
         eventually(5.seconds) {
-            Paths.get("./data/sftptest/foo.txt").shouldExist()
+            Paths.get("./data/sftpdata/foo.txt").shouldExist()
         }
     }
 }
