@@ -22,6 +22,9 @@ import java.security.PublicKey
 import java.security.spec.RSAPublicKeySpec
 import java.util.*
 
+// see: https://github.com/spring-projects/spring-integration-samples/blob/main/basic/sftp/src/test/java/org/springframework/integration/samples/sftp/EmbeddedSftpServer.java
+// and another version using user/password authentication.
+// https://github.com/spring-projects/spring-integration/blob/main/spring-integration-sftp/src/test/java/org/springframework/integration/sftp/SftpTestSupport.java
 class EmbeddedSftpServer : InitializingBean, SmartLifecycle {
     private val server = SshServer.setUpDefaultServer()
 
