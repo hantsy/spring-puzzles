@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.example</groupId>
-    <artifactId>cafe-integration-dsl-amqp</artifactId>
+    <artifactId>integration-amqp-cafe</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>cafe-integration-dsl-amqp</name>
+    <name>integration-amqp-cafe</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
@@ -19,8 +19,8 @@
 
         <!-- maven plugins -->
         <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.0.0-M5</maven-failsafe-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M7</maven-failsafe-plugin.version>
 
         <skip.unit.tests>true</skip.unit.tests>
         <skip.integration.tests>true</skip.integration.tests>
