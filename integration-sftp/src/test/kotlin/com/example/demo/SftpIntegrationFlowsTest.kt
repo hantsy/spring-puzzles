@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.seconds
         "sftp.port=2222",
         "sftp.user=demo",
         "sftp.password=demo",
-        "sftp.remoteDirectory=/home/demo/sftp",
+        "sftp.remoteDirectory=/",
         "logging.level.org.springframework.integration.sftp=TRACE",
         "logging.level.org.springframework.integration.file=TRACE",
         "logging.level.com.jcraft.jsch=TRACE"
