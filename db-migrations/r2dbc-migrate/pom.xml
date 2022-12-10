@@ -52,23 +52,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-maven-plugin</artifactId>
-                <version>8.5.2</version>
-                <configuration>
-                    <url>jdbc:postgresql://localhost/testdb</url>
-                    <user>user</user>
-                    <password>password</password>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.postgresql</groupId>
-                        <artifactId>postgresql</artifactId>
-                        <version>42.3.7</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
         </plugins>
     </build>
 
