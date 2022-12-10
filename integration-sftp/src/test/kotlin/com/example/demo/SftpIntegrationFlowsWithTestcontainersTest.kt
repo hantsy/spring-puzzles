@@ -1,11 +1,11 @@
 package io.etip.backend.infrastructure
 
 import com.example.demo.*
-import com.jcraft.jsch.ChannelSftp
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.apache.sshd.sftp.client.SftpClient
 import org.junit.jupiter.api.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,14 +90,14 @@ class SftpIntegrationFlowsWithTestcontainersTest {
     @EnableConfigurationProperties(value = [SftpProperties::class])
     class TestConfig {
         @Bean
-        fun remoteFileTemplate(sessionFactory: SessionFactory<ChannelSftp.LsEntry>) = RemoteFileTemplate(sessionFactory)
+        fun remoteFileTemplate(sessionFactory: SessionFactory<SftpClient.DirEntry>) = RemoteFileTemplate(sessionFactory)
     }
 
     @Autowired
     lateinit var uploadGateway: UploadGateway
 
     @Autowired
-    lateinit var template: RemoteFileTemplate<ChannelSftp.LsEntry>
+    lateinit var template: RemoteFileTemplate<SftpClient.DirEntry>
 
     @BeforeEach
     fun setup() {

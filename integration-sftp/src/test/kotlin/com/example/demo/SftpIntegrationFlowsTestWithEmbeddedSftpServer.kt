@@ -1,10 +1,10 @@
 package com.example.demo
 
-import com.jcraft.jsch.ChannelSftp.LsEntry
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.apache.sshd.sftp.client.SftpClient
 import org.junit.jupiter.api.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,7 +71,7 @@ class SftpIntegrationFlowsTestWithEmbeddedSftpServer {
         }
 
         @Bean
-        fun remoteFileTemplate(sessionFactory: SessionFactory<LsEntry>) = RemoteFileTemplate(sessionFactory)
+        fun remoteFileTemplate(sessionFactory: SessionFactory<SftpClient.DirEntry>) = RemoteFileTemplate(sessionFactory)
     }
 
     @Autowired
@@ -81,7 +81,7 @@ class SftpIntegrationFlowsTestWithEmbeddedSftpServer {
     lateinit var embeddedSftpServer: EmbeddedSftpServer
 
     @Autowired
-    lateinit var template: RemoteFileTemplate<LsEntry>
+    lateinit var template: RemoteFileTemplate<SftpClient.DirEntry>
 
     @Autowired
     lateinit var applicationEvents: ApplicationEvents
@@ -95,7 +95,6 @@ class SftpIntegrationFlowsTestWithEmbeddedSftpServer {
     fun teardown() {
         embeddedSftpServer.stop()
     }
-
 
     @BeforeEach
     @AfterEach
@@ -130,6 +129,23 @@ class SftpIntegrationFlowsTestWithEmbeddedSftpServer {
             applicationEvents.stream(DownloadedEvent::class.java).count() shouldBe 1
             SftpTestUtils.fileExists(template, testFilename) shouldBe false
             SftpTestUtils.cleanUp(template)
+        }
+    }
+
+    @Test
+    fun `list files in remote sftp folder`() = runTest {
+        val test = File("src/test/resources/foo.txt")
+        log.debug("uploading file: $test, ${test.exists()}")
+        val testFilename = test.name
+        SftpTestUtils.createTestFiles(template)
+        uploadGateway.upload(test)
+        eventually(5.seconds) {
+            SftpTestUtils.fileExists(template, testFilename) shouldBe true
+            uploadGateway.listRemoteFolder("si.sftp.sample").forEach {
+                log.debug("list remote files: $it")
+            }
+
+            SftpTestUtils.cleanUp(template, testFilename)
         }
     }
 }

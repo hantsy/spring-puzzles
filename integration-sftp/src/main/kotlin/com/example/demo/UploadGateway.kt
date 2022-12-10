@@ -9,4 +9,8 @@ interface UploadGateway {
 
     @Gateway(requestChannel = "toSftpChannel")
     fun upload(file: File)
+
+    @Gateway(requestChannel = "listSftpChannel", replyChannel = "replyListSftpChannel")
+    fun listRemoteFolder(folder: String): List<String>
+
 }

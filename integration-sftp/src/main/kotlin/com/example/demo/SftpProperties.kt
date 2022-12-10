@@ -5,7 +5,6 @@ import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.core.io.Resource
 
 @ConfigurationProperties(prefix = "sftp")
-@ConstructorBinding
 data class SftpProperties(
     val hostname: String?,
     val port: Int?,

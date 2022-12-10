@@ -1,19 +1,20 @@
 package com.example.demo
 
-import com.jcraft.jsch.ChannelSftp
+import org.apache.sshd.sftp.client.SftpClient
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.integration.dsl.IntegrationFlow
-import org.springframework.integration.dsl.IntegrationFlows
 import org.springframework.integration.dsl.Pollers
 import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec
 import org.springframework.integration.event.outbound.ApplicationEventPublishingMessageHandler
+import org.springframework.integration.file.remote.gateway.AbstractRemoteFileOutboundGateway
 import org.springframework.integration.file.remote.session.CachingSessionFactory
 import org.springframework.integration.file.remote.session.SessionFactory
 import org.springframework.integration.file.support.FileExistsMode
 import org.springframework.integration.sftp.dsl.Sftp
 import org.springframework.integration.sftp.session.DefaultSftpSessionFactory
+import org.springframework.integration.sftp.session.SftpFileInfo
 import java.io.File
 
 @Configuration
@@ -26,7 +27,7 @@ class SftpIntegrationFlows(
     }
 
     @Bean
-    fun sftpSessionFactory(): SessionFactory<ChannelSftp.LsEntry> {
+    fun sftpSessionFactory(): SessionFactory<SftpClient.DirEntry> {
         val factory = DefaultSftpSessionFactory(true)
         factory.setHost(sftpProperties.hostname)
         factory.setPort(sftpProperties.port ?: 22)
@@ -45,7 +46,7 @@ class SftpIntegrationFlows(
 
     @Bean
     fun sftpInboundFlow(): IntegrationFlow {
-        return IntegrationFlows
+        return IntegrationFlow
             .from(
                 Sftp.inboundAdapter(sftpSessionFactory())
                     .preserveTimestamp(true)
@@ -82,7 +83,7 @@ class SftpIntegrationFlows(
 
     @Bean
     fun sftpOutboundFlow(): IntegrationFlow {
-        return IntegrationFlows
+        return IntegrationFlow
             .from("toSftpChannel")
             .handle(
                 Sftp.outboundAdapter(sftpSessionFactory(), FileExistsMode.FAIL)
@@ -91,4 +92,16 @@ class SftpIntegrationFlows(
             )
             .get()
     }
+
+    @Bean
+    fun listSftpFolderOutboundFlow(sftpSessionFactory: SessionFactory<SftpClient.DirEntry>): IntegrationFlow =
+        IntegrationFlow
+            .from("listSftpChannel")
+            .handle(
+                Sftp.outboundGateway(sftpSessionFactory, AbstractRemoteFileOutboundGateway.Command.LS, "payload")
+                    .options(AbstractRemoteFileOutboundGateway.Option.RECURSIVE)
+            )
+            .transform<List<SftpFileInfo>, List<String>> { it.map { s -> s.toString() }.toList() }
+            .channel("replyListSftpChannel")
+            .get()
 }
