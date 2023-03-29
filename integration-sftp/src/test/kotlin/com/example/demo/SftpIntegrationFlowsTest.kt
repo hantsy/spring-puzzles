@@ -36,6 +36,7 @@ import kotlin.time.Duration.Companion.seconds
         "sftp.user=demo",
         "sftp.password=demo",
         "sftp.remoteDirectory=/",
+        "sftp.remoteFooDirectory=/foo",
         "logging.level.org.springframework.integration.sftp=TRACE",
         "logging.level.org.springframework.integration.file=TRACE",
         "logging.level.com.jcraft.jsch=TRACE"

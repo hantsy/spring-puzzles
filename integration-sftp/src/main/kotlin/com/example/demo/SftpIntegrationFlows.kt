@@ -8,8 +8,11 @@ import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.Pollers
 import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec
 import org.springframework.integration.event.outbound.ApplicationEventPublishingMessageHandler
+import org.springframework.integration.file.remote.aop.RotatingServerAdvice
+import org.springframework.integration.file.remote.aop.RotationPolicy
 import org.springframework.integration.file.remote.gateway.AbstractRemoteFileOutboundGateway
 import org.springframework.integration.file.remote.session.CachingSessionFactory
+import org.springframework.integration.file.remote.session.DelegatingSessionFactory
 import org.springframework.integration.file.remote.session.SessionFactory
 import org.springframework.integration.file.support.FileExistsMode
 import org.springframework.integration.sftp.dsl.Sftp
@@ -45,13 +48,30 @@ class SftpIntegrationFlows(
     }
 
     @Bean
+    fun advice(): RotatingServerAdvice {
+        val keyDirectories = listOf(
+            RotationPolicy.KeyDirectory(
+                "foo",
+                sftpProperties.remoteDirectory
+            ),
+            RotationPolicy.KeyDirectory(
+                "foo",
+                sftpProperties.remoteFooDirectory
+            )
+        )
+        return RotatingServerAdvice(DelegatingSessionFactory { sftpSessionFactory() }, keyDirectories, true)
+    }
+
+
+    @Bean
     fun sftpInboundFlow(): IntegrationFlow {
         return IntegrationFlow
             .from(
                 Sftp.inboundAdapter(sftpSessionFactory())
                     .preserveTimestamp(true)
                     .deleteRemoteFiles(true) // delete files after transfer is done successfully
-                    .remoteDirectory(sftpProperties.remoteDirectory)
+                    // use advice to select multiple folders.
+                    //.remoteDirectory(sftpProperties.remoteDirectory)
                     .regexFilter(".*\\.csv$")
                     // local settings
                     .localFilenameExpression("#this.toUpperCase() + '.csv'")
@@ -60,7 +80,7 @@ class SftpIntegrationFlows(
             ) { e: SourcePollingChannelAdapterSpec ->
                 e.id("sftpInboundAdapter")
                     .autoStartup(true)
-                    .poller(Pollers.fixedDelay(5000))
+                    .poller(Pollers.fixedDelay(5000).advice(advice()))
             }
             /*            .handle { m: Message<*> ->
                             run {
@@ -88,7 +108,7 @@ class SftpIntegrationFlows(
             .handle(
                 Sftp.outboundAdapter(sftpSessionFactory(), FileExistsMode.FAIL)
                     .useTemporaryFileName(false)
-                    .remoteDirectory(sftpProperties.remoteDirectory)
+                    .remoteDirectory(sftpProperties.remoteDirectory ?: "")
             )
             .get()
     }
