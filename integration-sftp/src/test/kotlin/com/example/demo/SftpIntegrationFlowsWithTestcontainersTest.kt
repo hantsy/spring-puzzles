@@ -1,6 +1,5 @@
-package io.etip.backend.infrastructure
+package com.example.demo
 
-import com.example.demo.*
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -23,7 +23,6 @@ import org.springframework.test.context.event.RecordApplicationEvents
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @SpringBootTest(
     classes = [SftpIntegrationFlowsTestWithEmbeddedSftpServer.TestConfig::class]
 )

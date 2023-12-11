@@ -9,7 +9,6 @@ import org.apache.sshd.sftp.server.SftpSubsystemFactory
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.context.SmartLifecycle
 import org.springframework.core.io.ClassPathResource
-import org.springframework.util.Base64Utils
 import org.springframework.util.StreamUtils
 import java.io.IOException
 import java.io.InputStream
@@ -71,7 +70,7 @@ class EmbeddedSftpServer : InitializingBean, SmartLifecycle {
         while (keyBytes[keyBytes.size - 1].toInt() == 0x0a || keyBytes[keyBytes.size - 1].toInt() == 0x0d) {
             keyBytes = Arrays.copyOf(keyBytes, keyBytes.size - 1)
         }
-        val decodeBuffer: ByteArray = Base64Utils.decode(keyBytes)
+        val decodeBuffer: ByteArray = Base64.getDecoder().decode(keyBytes)
         val bb: ByteBuffer = ByteBuffer.wrap(decodeBuffer)
         val len: Int = bb.int
         val type = ByteArray(len)

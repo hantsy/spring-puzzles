@@ -1,12 +1,7 @@
-package io.etip.backend.infrastructure
+package com.example.demo
 
-import com.example.demo.IntegrationConfig
-import com.example.demo.SftpIntegrationFlows
-import com.example.demo.SftpProperties
-import com.example.demo.UploadGateway
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.paths.shouldExist
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,7 +20,6 @@ import java.nio.file.Paths
 import kotlin.io.path.isRegularFile
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @SpringBootTest(
     classes = [SftpIntegrationFlowsTest.TestConfig::class]
 )

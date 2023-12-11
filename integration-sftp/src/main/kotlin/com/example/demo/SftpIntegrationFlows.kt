@@ -72,6 +72,7 @@ class SftpIntegrationFlows(
                     .deleteRemoteFiles(true) // delete files after transfer is done successfully
                     // use advice to select multiple folders.
                     //.remoteDirectory(sftpProperties.remoteDirectory)
+                    .remoteDirectory(".")
                     .regexFilter(".*\\.csv$")
                     // local settings
                     .localFilenameExpression("#this.toUpperCase() + '.csv'")
