@@ -1,0 +1,16 @@
+version: '3.7' # specify docker-compose version
+
+services:
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blogdb
+      POSTGRES_USER: user
+    volumes:
+      - ./data:/var/lib/postgresql
+      - ./pg-initdb.d:/docker-entrypoint-initdb.d
+  
