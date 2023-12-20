@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -26,21 +25,12 @@ public class PostRepositoryTest {
 
     @TestConfiguration
     @Import(HibernateReactiveConfig.class)
-    static class TestConfig {}
+    static class TestConfig {
+    }
 
     @Container
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:12");
-       // .withCopyFileToContainer(MountableFile.forClasspathResource("init.sql"), "/docker-entrypoint-initdb.d/init.sql");
-
-//    @DynamicPropertySource
-//    static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-//        registry.add("spring.r2dbc.url", () -> "r2dbc:postgresql://"
-//            + postgreSQLContainer.getHost() + ":" + postgreSQLContainer.getFirstMappedPort()
-//            + "/" + postgreSQLContainer.getDatabaseName());
-//        registry.add("spring.r2dbc.username", () -> postgreSQLContainer.getUsername());
-//        registry.add("spring.r2dbc.password", () -> postgreSQLContainer.getPassword());
-//    }
-
+    // .withCopyFileToContainer(MountableFile.forClasspathResource("init.sql"), "/docker-entrypoint-initdb.d/init.sql");
 
     @Autowired
     PostRepository posts;
