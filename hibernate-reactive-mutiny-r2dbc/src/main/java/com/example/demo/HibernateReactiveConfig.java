@@ -11,8 +11,7 @@ public class HibernateReactiveConfig {
 
     @Bean
     public Mutiny.SessionFactory sessionFactory() {
-        try (var emf = Persistence.createEntityManagerFactory(DEFAULT_PERSISTENCE_UNIT_NAME)) {
-            return emf.unwrap(Mutiny.SessionFactory.class);
-        }
+        return Persistence.createEntityManagerFactory(DEFAULT_PERSISTENCE_UNIT_NAME)
+            .unwrap(Mutiny.SessionFactory.class);
     }
 }
