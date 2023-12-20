@@ -48,7 +48,7 @@ class PostController {
                 this.posts.findById(id),
                 Uni.createFrom().item(data)
             )
-            .combinedWith((p, d) -> {
+            .with((p, d) -> {
                 p.setTitle(d.getTitle());
                 p.setContent(d.getContent());
                 return p;
