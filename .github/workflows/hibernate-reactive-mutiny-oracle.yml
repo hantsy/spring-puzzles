@@ -8,8 +8,6 @@ on:
     paths:
       - "hibernate-reactive-mutiny-oracle/**"
     branches: [master]
-    
-
           
 jobs:
   build:
