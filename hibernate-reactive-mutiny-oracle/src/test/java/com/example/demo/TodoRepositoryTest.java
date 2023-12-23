@@ -13,6 +13,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import reactor.test.StepVerifier;
 
 import java.util.concurrent.CountDownLatch;
@@ -26,9 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Slf4j
 public class TodoRepositoryTest {
 
+    static DockerImageName oracleDockerImageName = DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart").asCompatibleSubstituteFor("gvenzl/oracle-xe");
+
     // see: https://java.testcontainers.org/modules/databases/oraclexe/
     @Container
-    static OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
+    static OracleContainer oracleContainer = new OracleContainer(oracleDockerImageName)
         .withDatabaseName("blogdb")
         .withUsername("testUser")
         .withPassword("testPassword");
