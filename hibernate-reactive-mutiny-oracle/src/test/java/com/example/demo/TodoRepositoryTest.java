@@ -38,9 +38,11 @@ public class TodoRepositoryTest {
 
     @DynamicPropertySource
     static void registerDynamicProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.r2dbc.url", () -> "r2dbc:oracle://"
+        String url = "r2dbc:oracle://"
             + oracleContainer.getHost() + ":" + oracleContainer.getFirstMappedPort()
-            + "/" + oracleContainer.getDatabaseName());
+            + "/" + oracleContainer.getDatabaseName();
+        log.debug("connecting to oracle db: {}", url);
+        registry.add("spring.r2dbc.url", () -> url);
         registry.add("spring.r2dbc.username", () -> oracleContainer.getUsername());
         registry.add("spring.r2dbc.password", () -> oracleContainer.getPassword());
     }
