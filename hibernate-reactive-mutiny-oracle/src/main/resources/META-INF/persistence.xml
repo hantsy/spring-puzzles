@@ -8,7 +8,7 @@
         <properties>
             <!-- PostgreSQL -->
             <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:oracle:thin://127.0.0.1/blogdb"/>
+                      value="jdbc:oracle:thin://oracle:1521/blogdb"/>
             <!-- Credentials -->
             <property name="jakarta.persistence.jdbc.user"
                       value="testUser"/>
