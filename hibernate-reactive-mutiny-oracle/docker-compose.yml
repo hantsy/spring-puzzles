@@ -1,0 +1,16 @@
+version: '3.7' # specify docker-compose version
+
+services:
+  oracle:
+    # see https://www.oracle.com/database/technologies/appdev/xe.html
+    image: gvenzl/oracle-xe:21.3.0-slim
+    ports:
+      - "1521:1521"
+    restart: always
+    environment:
+      ORACLE_PASSWORD: password
+      ORACLE_DATABASE: blogdb
+      APP_USER: user
+      APP_USER_PASSWORD: password
+    volumes:
+      - ./data:/var/lib/oracle-xe
