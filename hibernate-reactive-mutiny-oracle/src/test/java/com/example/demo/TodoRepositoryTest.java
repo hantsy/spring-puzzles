@@ -28,7 +28,7 @@ public class TodoRepositoryTest {
 
     // see: https://java.testcontainers.org/modules/databases/oraclexe/
     @Container
-    static OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
+    static OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-free:23-slim-faststart")
         .withDatabaseName("blogdb")
         .withUsername("testUser")
         .withPassword("testPassword");
@@ -56,7 +56,7 @@ public class TodoRepositoryTest {
     }
 
     @Test
-    public void testPostRepositoryExisted() {
+    public void testTodosRepositoryExisted() {
         assertNotNull(todos);
     }
 

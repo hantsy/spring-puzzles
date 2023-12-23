@@ -1,8 +1,8 @@
 CREATE SEQUENCE todos_seq START WITH 1;
-
+-- 23c supports `if not exists`
 CREATE TABLE IF NOT EXISTS todos
 (
-    id    NUMBER  DEFAULT todos_seq.nextval NOT NULL,
+    id    NUMBER(10)  DEFAULT todos_seq.nextval NOT NULL,
     title VARCHAR2(200)
 );
 
