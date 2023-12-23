@@ -8,22 +8,47 @@ on:
     paths:
       - "hibernate-reactive-mutiny-oracle/**"
     branches: [master]
+    
 
+          
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      # Oracle service (label used to access the service container)
+      oracle:
+        # Docker Hub image (feel free to change the tag "latest" to any other available one)
+        image: gvenzl/oracle-free:latest
+    
+        # Provide passwords and other environment variables to container
+        env:
+          ORACLE_PASSWORD: sysPassword
+          ORACLE_DATABASE: blogdb
+          APP_USER: testUser
+          APP_USER_PASSWORD: testPassword
+    
+        # Forward Oracle port
+        ports:
+          - 1521:1521
+    
+        # Provide healthcheck script options for startup
+        options: >-
+          --health-cmd healthcheck.sh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v2
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
-      - name: Set up JDK
-        uses: actions/setup-java@v2
-        with:
-          java-version: "21"
-          distribution: "zulu"
-          cache: "maven"
+      # - name: Set up JDK
+      #   uses: actions/setup-java@v2
+      #   with:
+      #     java-version: "21"
+      #     distribution: "zulu"
+      #     cache: "maven"
       # - name: Set up Oracle(via Docker Compose)
         # run: |
           # cd hibernate-reactive-mutiny-oracle
