@@ -41,7 +41,7 @@ public class TodoRepositoryTest {
         String url = "r2dbc:oracle://"
             + oracleContainer.getHost() + ":" + oracleContainer.getFirstMappedPort()
             + "/" + oracleContainer.getDatabaseName();
-        log.debug("connecting to oracle db: {}", url);
+        log.debug("connecting to oracle db via r2dbc: {}", url);
         registry.add("spring.r2dbc.url", () -> url);
         registry.add("spring.r2dbc.username", () -> oracleContainer.getUsername());
         registry.add("spring.r2dbc.password", () -> oracleContainer.getPassword());
