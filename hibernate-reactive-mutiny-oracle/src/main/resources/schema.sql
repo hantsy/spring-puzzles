@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS todos
     title VARCHAR2(200)
 );
 
-ALTER TABLE todos
-    DROP CONSTRAINT IF EXISTS todos_pk;
+-- ALTER TABLE todos
+--     DROP CONSTRAINT IF EXISTS todos_pk;
 ALTER TABLE todos
     ADD CONSTRAINT todos_pk PRIMARY KEY (id);
