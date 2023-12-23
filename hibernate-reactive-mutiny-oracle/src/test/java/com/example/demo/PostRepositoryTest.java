@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Testcontainers
+//@Testcontainers
 @SpringBootTest
 @Slf4j
 public class PostRepositoryTest {
@@ -29,11 +29,12 @@ public class PostRepositoryTest {
     }
 
     // see: https://java.testcontainers.org/modules/databases/oraclexe/
-    @Container
-    static OracleContainer oracle = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
-        .withDatabaseName("blogdb")
-        .withUsername("testUser")
-        .withPassword("testPassword");
+//    @Container
+//    static OracleContainer oracle = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
+//        .withExposedPorts(1521)
+//        .withDatabaseName("blogdb")
+//        .withUsername("testUser")
+//        .withPassword("testPassword");
 
     @Autowired
     PostRepository posts;
