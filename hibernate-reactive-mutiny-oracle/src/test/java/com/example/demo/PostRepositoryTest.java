@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-//@Testcontainers
 @SpringBootTest
 @Slf4j
 public class PostRepositoryTest {
