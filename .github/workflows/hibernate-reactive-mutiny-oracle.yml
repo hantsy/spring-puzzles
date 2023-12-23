@@ -24,17 +24,17 @@ jobs:
           java-version: "21"
           distribution: "zulu"
           cache: "maven"
-      # - name: Set up Oracle(via Docker Compose)
-        # run: |
-          # cd hibernate-reactive-mutiny-oracle
-          # docker-compose up -d
-          # sleep 10
-          # docker ps -a
-      - uses: gvenzl/setup-oracle-free@v1
-        with:
-          oracle-database: blogdb
-          app-user: testUser
-          app-user-password: testPassword     
+      - name: Set up Oracle(via Docker Compose)
+        run: |
+          cd hibernate-reactive-mutiny-oracle
+          docker-compose up -d
+          sleep 10
+          docker ps -a
+      # - uses: gvenzl/setup-oracle-free@v1
+        # with:
+          # oracle-database: blogdb
+          # app-user: testUser
+          # app-user-password: testPassword     
       - name: Build with Maven
         run: |
           mvn -B -q clean package --file hibernate-reactive-mutiny-oracle/pom.xml
