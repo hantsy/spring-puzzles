@@ -32,8 +32,8 @@ public class PostRepositoryTest {
     @Container
     static OracleContainer oracle = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
         .withDatabaseName("blogdb")
-        .withUsername("user")
-        .withPassword("password");
+        .withUsername("testUser")
+        .withPassword("testPassword");
 
     @Autowired
     PostRepository posts;

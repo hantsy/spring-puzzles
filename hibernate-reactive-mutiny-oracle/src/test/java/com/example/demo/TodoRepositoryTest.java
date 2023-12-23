@@ -30,8 +30,8 @@ public class TodoRepositoryTest {
     @Container
     static OracleContainer oracleContainer = new OracleContainer("gvenzl/oracle-xe:21-slim-faststart")
         .withDatabaseName("blogdb")
-        .withUsername("user")
-        .withPassword("password");
+        .withUsername("testUser")
+        .withPassword("testPassword");
 
     @DynamicPropertySource
     static void registerDynamicProperties(DynamicPropertyRegistry registry) {

@@ -10,7 +10,7 @@ services:
     environment:
       ORACLE_PASSWORD: password
       ORACLE_DATABASE: blogdb
-      APP_USER: user
-      APP_USER_PASSWORD: password
+      APP_USER: testUser
+      APP_USER_PASSWORD: testPassword
     volumes:
       - ./data:/var/lib/oracle-xe

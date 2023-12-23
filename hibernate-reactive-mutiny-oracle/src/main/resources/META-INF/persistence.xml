@@ -11,9 +11,9 @@
                       value="jdbc:oracle://localhost:1521/blogdb"/>
             <!-- Credentials -->
             <property name="jakarta.persistence.jdbc.user"
-                      value="user"/>
+                      value="testUser"/>
             <property name="jakarta.persistence.jdbc.password"
-                      value="password"/>
+                      value="testPassword"/>
 
             <!-- The Vert.x SQL Client connection pool size -->
             <property name="hibernate.connection.pool_size"
