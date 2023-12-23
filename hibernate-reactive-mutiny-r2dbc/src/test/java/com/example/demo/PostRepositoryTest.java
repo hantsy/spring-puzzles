@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Testcontainers
+//@Testcontainers
 @SpringBootTest
 @Slf4j
 public class PostRepositoryTest {
@@ -28,8 +28,8 @@ public class PostRepositoryTest {
     static class TestConfig {
     }
 
-    @Container
-    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:12");
+//    @Container
+//    static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:12");
     // .withCopyFileToContainer(MountableFile.forClasspathResource("init.sql"), "/docker-entrypoint-initdb.d/init.sql");
 
     @Autowired
