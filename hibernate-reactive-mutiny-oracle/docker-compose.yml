@@ -13,4 +13,4 @@ services:
       APP_USER: testUser
       APP_USER_PASSWORD: testPassword
     volumes:
-      - ./data:/var/lib/oracle-xe
+      - ./data:/opt/oracle/oradata
