@@ -30,7 +30,7 @@ jobs:
           # docker-compose up -d
           # sleep 10
           # docker ps -a
-     - uses: gvenzl/setup-oracle-free@v1
+      - uses: gvenzl/setup-oracle-free@v1
         with:
           oracle-database: blogdb
           app-user: testUser
