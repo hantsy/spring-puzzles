@@ -20,10 +20,10 @@ jobs:
     
         # Provide passwords and other environment variables to container
         env:
-          ORACLE_PASSWORD: sysPassword
+          ORACLE_PASSWORD: vertx
           ORACLE_DATABASE: blogdb
-          APP_USER: testUser
-          APP_USER_PASSWORD: testPassword
+          APP_USER: vertx
+          APP_USER_PASSWORD: vertx
     
         # Forward Oracle port
         ports:
@@ -48,11 +48,11 @@ jobs:
           distribution: "zulu"
           cache: "maven"
       # - name: Set up Oracle(via Docker Compose)
-        # run: |
-          # cd hibernate-reactive-mutiny-oracle
-          # docker-compose up -d
-          # sleep 10
-          # docker ps -a
+      #   run: |
+      #     cd hibernate-reactive-mutiny-oracle
+      #     docker-compose up -d
+      #     sleep 10
+      #     docker ps -a
       # - uses: gvenzl/setup-oracle-free@v1
         # with:
           # oracle-database: blogdb
