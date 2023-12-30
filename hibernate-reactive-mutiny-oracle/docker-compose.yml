@@ -8,9 +8,9 @@ services:
       - "1521:1521"
     restart: always
     environment:
-      ORACLE_PASSWORD: sysPassword
+      ORACLE_PASSWORD: vertx
       ORACLE_DATABASE: blogdb
-      APP_USER: testUser
-      APP_USER_PASSWORD: testPassword
+      APP_USER: vertx
+      APP_USER_PASSWORD: vertx
     volumes:
       - ./data:/opt/oracle/oradata

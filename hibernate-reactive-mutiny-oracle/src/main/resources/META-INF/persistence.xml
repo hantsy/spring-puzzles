@@ -6,14 +6,15 @@
         <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
         <class>com.example.demo.Post</class>
         <properties>
-            <!-- PostgreSQL -->
+            <!-- Oracle connection is a little different from MySQL, Postgres, use a `@` instead of `//`
+            see: https://vertx.io/docs/4.2.7/vertx-oracle-client/java/ -->
             <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:oracle:thin://localhost:1521/blogdb"/>
+                      value="jdbc:oracle:thin:@localhost:1521/blogdb"/>
             <!-- Credentials -->
             <property name="jakarta.persistence.jdbc.user"
-                      value="testUser"/>
+                      value="vertx"/>
             <property name="jakarta.persistence.jdbc.password"
-                      value="testPassword"/>
+                      value="vertx"/>
 
             <!-- The Vert.x SQL Client connection pool size -->
             <property name="hibernate.connection.pool_size"
