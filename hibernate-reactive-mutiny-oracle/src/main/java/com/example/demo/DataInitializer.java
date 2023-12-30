@@ -26,7 +26,7 @@ public class DataInitializer implements ApplicationRunner {
 
         sessionFactory
             .withTransaction(
-                (conn, tx) -> conn.createQuery("DELETE FROM Post").executeUpdate()
+                (conn, tx) -> conn.createMutationQuery("DELETE FROM Post").executeUpdate()
                     .flatMap(r -> conn.persistAll(first, second))
                     .chain(conn::flush)
                     .flatMap(r -> conn.createQuery("SELECT p from Post p", Post.class).getResultList())
