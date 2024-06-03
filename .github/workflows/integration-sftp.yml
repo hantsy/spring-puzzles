@@ -26,5 +26,5 @@ jobs:
           cache: "maven"
       - name: Build with Maven
         run: |
-          mvn -B -q clean test
+          mvn -B -q clean test --file integration-sftp/pom.xml
      
