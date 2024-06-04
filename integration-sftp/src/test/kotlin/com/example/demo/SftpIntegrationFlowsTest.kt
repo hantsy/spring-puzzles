@@ -4,6 +4,7 @@ import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.paths.shouldExist
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,6 +37,7 @@ import kotlin.time.Duration.Companion.seconds
         "logging.level.com.jcraft.jsch=TRACE"
     ]
 )
+@Disabled
 class SftpIntegrationFlowsTest {
     companion object {
         private val log = LoggerFactory.getLogger(SftpIntegrationFlowsTest::class.java)

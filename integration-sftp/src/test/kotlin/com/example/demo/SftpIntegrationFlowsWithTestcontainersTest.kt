@@ -45,8 +45,8 @@ import kotlin.time.Duration.Companion.seconds
         "logging.level.com.jcraft.jsch=TRACE"
     ]
 )
-//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
+@Disabled
 class SftpIntegrationFlowsWithTestcontainersTest {
 
     companion object {

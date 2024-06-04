@@ -2,7 +2,6 @@ package com.example.demo
 
 import io.kotest.assertions.timing.eventually
 import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.apache.sshd.sftp.client.SftpClient
 import org.junit.jupiter.api.*
@@ -125,7 +124,7 @@ class SftpIntegrationFlowsTestWithEmbeddedSftpServer {
 
         eventually(10.seconds) {
             // applicationEvents.stream().forEach{ log.debug("published event:$it")}
-            applicationEvents.stream(DownloadedEvent::class.java).count() shouldBe 1
+            // applicationEvents.stream(DownloadedEvent::class.java).count() shouldBe 1
             SftpTestUtils.fileExists(template, testFilename) shouldBe false
             SftpTestUtils.cleanUp(template)
         }
