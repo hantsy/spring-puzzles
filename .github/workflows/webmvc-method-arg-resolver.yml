@@ -1,0 +1,32 @@
+name: webmvc-method-arg-resolver
+on:
+  push:
+    paths:
+      - "webmvc-method-arg-resolver/**"
+    branches: [master]
+  pull_request:
+    paths:
+      - "webmvc-method-arg-resolver/**"
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: "21"
+          distribution: "zulu"
+          cache: "gradle"
+      - name: Build with Gradle
+        run: |
+          cd webmvc-method-arg-resolver
+          chmod a+x ./gradlew
+          ./gradlew clean build
+     
