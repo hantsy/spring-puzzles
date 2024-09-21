@@ -1,12 +1,12 @@
-name: webmvc-method-arg-resolver
+name: webflux-method-arg-resolver
 on:
   push:
     paths:
-      - "webmvc-method-arg-resolver/**"
+      - "webflux-method-arg-resolver/**"
     branches: [master]
   pull_request:
     paths:
-      - "webmvc-method-arg-resolver/**"
+      - "webflux-method-arg-resolver/**"
     branches: [master]
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
           cache: "gradle"
       - name: Build with Gradle
         run: |
-          cd webmvc-method-arg-resolver
+          cd webflux-method-arg-resolver
           chmod a+x ./gradlew
           ./gradlew clean build
      
