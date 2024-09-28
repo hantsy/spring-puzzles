@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class WebConfig : WebMvcConfigurer {
 
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
-        resolvers.add(0, SimpleSortMapHandlerMethodArgumentResolver())
+        resolvers.add(SimpleSortMapHandlerMethodArgumentResolver())
     }
 
 //    @Bean
@@ -25,7 +25,7 @@ class WebConfig : WebMvcConfigurer {
 class SimpleSortMapHandlerMethodArgumentResolver : HandlerMethodArgumentResolver {
 
     override fun supportsParameter(parameter: MethodParameter): Boolean {
-        log.debug("test method param: {}", parameter)
+        log.info("test method param: {}", parameter)
         return Map::class.java.isAssignableFrom(parameter.parameterType)
     }
 

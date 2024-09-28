@@ -1,7 +1,7 @@
 plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
-	id("org.springframework.boot") version "3.4.0-M3"
+	id("org.springframework.boot") version "3.3.4"
 	id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -16,24 +16,20 @@ java {
 
 repositories {
 	mavenCentral()
-	maven { url = uri("https://repo.spring.io/milestone") }
 }
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+	// kotlin serialization
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
+
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	testImplementation("org.springframework.boot:spring-boot-starter-test"){
-		// use mockk as mocking framework
-		exclude(module = "mockito-core")
-		exclude(module = "android-json")
-	}
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
-	testImplementation("io.mockk:mockk-jvm:1.13.12")
-	testImplementation("com.ninja-squad:springmockk:4.0.2")
-	testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
