@@ -27,23 +27,7 @@ import org.springframework.web.server.ServerWebExchange
 import java.time.LocalDateTime
 
 @SpringBootApplication
-class DemoApplication {
-
-    @Bean
-    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-
-        val populator = CompositeDatabasePopulator().apply {
-            addPopulators(ResourceDatabasePopulator(ClassPathResource("schema.sql")))
-            addPopulators(ResourceDatabasePopulator(ClassPathResource("data.sql")))
-        }
-
-        return ConnectionFactoryInitializer().apply {
-            setConnectionFactory(connectionFactory)
-            setDatabasePopulator(populator)
-        }
-    }
-}
-
+class DemoApplication
 fun main(args: Array<String>) {
     runApplication<DemoApplication>(*args)
 }

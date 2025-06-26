@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactive.awaitSingleOrNull
+import kotlinx.coroutines.reactor.awaitSingle
+import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -34,23 +36,7 @@ import java.net.URI
 import java.time.LocalDateTime
 
 @SpringBootApplication
-class DemoApplication{
-
-    @Bean
-    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-
-        val populator = CompositeDatabasePopulator().apply {
-            addPopulators(ResourceDatabasePopulator(ClassPathResource("schema.sql")))
-            addPopulators(ResourceDatabasePopulator(ClassPathResource("data.sql")))
-        }
-
-        return ConnectionFactoryInitializer().apply {
-            setConnectionFactory(connectionFactory)
-            setDatabasePopulator(populator)
-        }
-    }
-}
-
+class DemoApplication
 
 fun main(args: Array<String>) {
     runApplication<DemoApplication>(*args)
@@ -142,11 +128,11 @@ class PostRepository(private val template: R2dbcEntityTemplate) {
             template.selectOne(Query.query(where("id").`is`(id)), Post::class.java)
                     .awaitSingleOrNull()
 
-    suspend fun deleteOne(id: Long): Int =
+    suspend fun deleteOne(id: Long): Long =
             template.delete(Query.query(where("id").`is`(id)), Post::class.java)
                     .awaitSingle()
 
-    suspend fun deleteAll(): Int =
+    suspend fun deleteAll(): Long =
             template.delete<Post>()
                     .all()
                     .awaitSingle()
@@ -160,7 +146,7 @@ class PostRepository(private val template: R2dbcEntityTemplate) {
     }
 
 
-    suspend fun update(id: Long, post: UpdatePostRequest): Int =
+    suspend fun update(id: Long, post: UpdatePostRequest): Long =
             template.update(
                     Query.query(where("id").`is`(id)),
                     Update.update("title", post.title)

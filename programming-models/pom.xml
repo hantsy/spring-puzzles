@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>spring-puzzles-programming-models</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>spring-puzzles-programming-models</name>
+    <description>Spring Programming Models</description>
+    <modules>
+        <module>webmvc</module>
+        <module>webmvc-fn</module>
+        <module>webflux</module>
+        <module>webflux-fn</module>
+        <module>webflux-ktco</module>
+        <module>webflux-ktco-fn</module>
+    </modules>
+</project>
