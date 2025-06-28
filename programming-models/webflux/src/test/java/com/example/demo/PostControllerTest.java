@@ -1,33 +1,27 @@
 package com.example.demo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = PostController.class)
+@WebFluxTest(controllers = PostController.class)
 public class PostControllerTest {
 
     @Autowired
-    MockMvc mockMvc;
-
-    @Autowired
-    ObjectMapper objectMapper;
+    WebTestClient client;
 
     @MockitoBean
     PostRepository posts;
@@ -35,16 +29,17 @@ public class PostControllerTest {
     @Test
     public void getAll() throws Exception {
         when(posts.findAll()).thenReturn(
-                List.of(
+                Flux.just(
                         new Post(1L, "test one", "content one", LocalDateTime.now()),
                         new Post(2L, "test two", "content two", LocalDateTime.now())
                 )
         );
 
-        mockMvc.perform(get("/posts").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.size()").value(2));
+        client.get().uri("/posts").accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody().jsonPath("$.size()").isEqualTo(2);
 
         verify(posts, times(1)).findAll();
         verifyNoMoreInteractions(posts);
@@ -55,12 +50,13 @@ public class PostControllerTest {
         var id = 1L;
         var post = new Post(id, "test one", "content one", LocalDateTime.now());
         var idCaptor = ArgumentCaptor.forClass(Long.class);
-        when(posts.findById(idCaptor.capture())).thenReturn(Optional.of(post));
+        when(posts.findById(idCaptor.capture())).thenReturn(Mono.just(post));
 
-        mockMvc.perform(get("/posts/{id}", id).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(id));
+        client.get().uri("/posts/{id}", id).accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody().jsonPath("$.id").isEqualTo(id);
 
         assertThat(idCaptor.getValue()).isEqualTo(id);
 
@@ -70,10 +66,12 @@ public class PostControllerTest {
 
     @Test
     public void getPostById_nonExisting() throws Exception {
-        when(posts.findById(anyLong())).thenReturn(Optional.empty());
+        var id = 1L;
+        when(posts.findById(anyLong())).thenReturn(Mono.empty());
 
-        mockMvc.perform(get("/posts/{id}", 1L).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+        client.get().uri("/posts/{id}", id).accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
 
         verify(posts, times(1)).findById(anyLong());
         verifyNoMoreInteractions(posts);
@@ -83,13 +81,13 @@ public class PostControllerTest {
     public void createPost() throws Exception {
         var id = 1L;
         var post = new Post(id, "test one", "content one", LocalDateTime.now());
-        when(posts.save(any(Post.class))).thenReturn(post);
+        when(posts.save(any(Post.class))).thenReturn(Mono.just(post));
 
         var data = new Post(null, "title one", "content one", null);
-        mockMvc.perform(post("/posts").contentType(MediaType.APPLICATION_JSON).content(asJsonString(data)))
-                .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.header().exists("Location"))
-                .andExpect(header().string("Location", CoreMatchers.containsString("/posts/" + id)));
+        client.post().uri("/posts").contentType(MediaType.APPLICATION_JSON).bodyValue(data)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectHeader().location("/posts/" + id);
 
         verify(posts, times(1)).save(any(Post.class));
         verifyNoMoreInteractions(posts);
@@ -99,15 +97,16 @@ public class PostControllerTest {
     public void updatePost() throws Exception {
         var id = 1L;
         var post = new Post(id, "test one", "content one", LocalDateTime.now());
-        when(posts.findById(anyLong())).thenReturn(Optional.of(post));
+        when(posts.findById(anyLong())).thenReturn(Mono.just(post));
 
         var updated = new Post(id, "updated test one", " updated content one", LocalDateTime.now());
         var postCaptor = ArgumentCaptor.forClass(Post.class);
-        when(posts.save(postCaptor.capture())).thenReturn(updated);
+        when(posts.save(postCaptor.capture())).thenReturn(Mono.just(updated));
 
         var data = new Post(null, "updated test one", " updated content one", LocalDateTime.now());
-        mockMvc.perform(put("/posts/{id}", id).contentType(MediaType.APPLICATION_JSON).content(asJsonString(data)))
-                .andExpect(status().isNoContent());
+        client.put().uri("/posts/{id}", id).contentType(MediaType.APPLICATION_JSON).bodyValue(data)
+                .exchange()
+                .expectStatus().isNoContent();
 
         assertThat(postCaptor.getValue().id()).isEqualTo(id);
 
@@ -119,14 +118,15 @@ public class PostControllerTest {
     @Test
     public void updatePost_nonExisting() throws Exception {
         var id = 1L;
-        when(posts.findById(anyLong())).thenReturn(Optional.empty());
+        when(posts.findById(anyLong())).thenReturn(Mono.empty());
 
         var updated = new Post(id, "updated test one", " updated content one", LocalDateTime.now());
-        when(posts.save(any(Post.class))).thenReturn(updated);
+        when(posts.save(any(Post.class))).thenReturn(Mono.just(updated));
 
         var data = new Post(null, "updated test one", " updated content one", LocalDateTime.now());
-        mockMvc.perform(put("/posts/{id}", id).contentType(MediaType.APPLICATION_JSON).content(asJsonString(data)))
-                .andExpect(status().isNotFound());
+        client.put().uri("/posts/{id}", id).contentType(MediaType.APPLICATION_JSON).bodyValue(data)
+                .exchange()
+                .expectStatus().isNotFound();
 
         verify(posts, times(1)).findById(anyLong());
         verify(posts, times(0)).save(any(Post.class));
@@ -137,13 +137,14 @@ public class PostControllerTest {
     public void deleteById() throws Exception {
         var id = 1L;
         var existedIdCaptor = ArgumentCaptor.forClass(Long.class);
-        when(posts.existsById(existedIdCaptor.capture())).thenReturn(true);
+        when(posts.existsById(existedIdCaptor.capture())).thenReturn(Mono.just(true));
 
         var deletedIdCaptor = ArgumentCaptor.forClass(Long.class);
-        doNothing().when(posts).deleteById(deletedIdCaptor.capture());
+        when(posts.deleteById(deletedIdCaptor.capture())).thenReturn(Mono.empty());
 
-        mockMvc.perform(delete("/posts/{id}", id))
-                .andExpect(status().isNoContent());
+        client.delete().uri("/posts/{id}", id)
+                .exchange()
+                .expectStatus().isNoContent();
 
         assertThat(existedIdCaptor.getValue()).isEqualTo(id);
         assertThat(deletedIdCaptor.getValue()).isEqualTo(id);
@@ -156,22 +157,15 @@ public class PostControllerTest {
     @Test
     public void deleteById_nonExisting() throws Exception {
         var id = 1L;
-        when(posts.existsById(anyLong())).thenReturn(false);
-        doNothing().when(posts).deleteById(anyLong());
+        when(posts.existsById(anyLong())).thenReturn(Mono.just(false));
+        when(posts.deleteById(anyLong())).thenReturn(Mono.empty());
 
-        mockMvc.perform(delete("/posts/{id}", id))
-                .andExpect(status().isNotFound());
+        client.delete().uri("/posts/{id}", id)
+                .exchange()
+                .expectStatus().isNotFound();
 
         verify(posts, times(1)).existsById(anyLong());
         verify(posts, times(0)).deleteById(anyLong());
         verifyNoMoreInteractions(posts);
-    }
-
-    private String asJsonString(final Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

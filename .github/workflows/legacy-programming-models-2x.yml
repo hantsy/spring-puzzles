@@ -1,0 +1,60 @@
+name: legacy-programming-models-2x
+on:
+  push:
+    paths:
+      - "legacy/programming-models-2x/**"
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: "17"
+          distribution: "zulu"
+      - name: Cache Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Set up Postgres(via Docker Compose)
+        run: |
+          cd programming-models
+          docker-compose up -d
+          sleep 10
+          docker ps -a
+      - name: Build with Maven(webmvc)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webmvc/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webmvc/pom.xml -Pit
+      - name: Build with Maven(webflux)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webflux/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webflux/pom.xml -Pit
+      - name: Build with Maven(webmvc-fn)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webmvc-fn/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webmvc-fn/pom.xml -Pit          
+      - name: Build with Maven(webflux-fn)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webflux-fn/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webflux-fn/pom.xml -Pit     
+      - name: Build with Maven(webflux-ktco)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webflux-ktco/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webflux-ktco/pom.xml -Pit     
+      - name: Build with Maven(webflux-ktco-fn)
+        run: |
+          mvn -B -q clean package --file legacy/programming-models-2x/webflux-ktco-fn/pom.xml
+          mvn -B -q verify --file legacy/programming-models-2x/webflux-ktco-fn/pom.xml -Pit        

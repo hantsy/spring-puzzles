@@ -10,6 +10,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,30 +60,20 @@ class DemoApplicationTests {
 
     @Test
     void getPostByNonExistingId() {
-       var result = this.client
+        assertThatThrownBy(() -> this.client
                 .get().uri("/posts/" + new Random(10).nextLong(10_0000))
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, res) ->  {
-                    log.debug("request: {}", request);
-                    log.debug("response: {}", res);
-                })
-                .toEntity(Post.class);
-
-       assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+                .toEntity(Post.class)
+        ).isInstanceOf(HttpClientErrorException.NotFound.class);
     }
 
     @Test
     void deletePostByNonExistingId() {
-        var responseEntity = this.client
+        assertThatThrownBy(() -> this.client
                 .delete().uri("/posts/" + new Random(10).nextLong(10_0000))
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, res) ->  {
-                    log.debug("request: {}", request);
-                    log.debug("response: {}", res);
-                })
-                .toBodilessEntity();
-
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+                .toBodilessEntity()
+        ).isInstanceOf(HttpClientErrorException.NotFound.class);
     }
 
 }

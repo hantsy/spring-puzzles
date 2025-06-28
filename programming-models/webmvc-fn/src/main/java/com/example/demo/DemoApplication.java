@@ -1,28 +1,35 @@
 package com.example.demo;
 
+import jakarta.servlet.ServletException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
-import org.springframework.jdbc.datasource.init.DataSourceInitializer;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.RouterFunctions;
+import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
 
-import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import static org.springframework.http.HttpMethod.*;
+import static org.springframework.web.servlet.function.RequestPredicates.method;
+import static org.springframework.web.servlet.function.RequestPredicates.path;
+import static org.springframework.web.servlet.function.RouterFunctions.nest;
+import static org.springframework.web.servlet.function.RouterFunctions.route;
+import static org.springframework.web.servlet.function.ServerResponse.*;
 
 @SpringBootApplication
 @Slf4j
@@ -32,29 +39,84 @@ public class DemoApplication {
         SpringApplication.run(DemoApplication.class, args);
     }
 
-    @Bean
-    ApplicationRunner runner(PostRepository posts) {
-        return (args) -> posts
-                .findAll()
-                .forEach(
-                        p -> log.info("initial post data: {}", p)
-                );
+}
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+class SampleRunner implements ApplicationRunner {
+    final PostRepository posts;
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        posts.findAll().forEach(p -> log.info("initial post data: {}", p));
     }
+}
 
+@Configuration
+class WebConfig {
 
     @Bean
-    RouterFunction<ServerResponse> routerFunction(PostRepository posts) {
-        return RouterFunctions.route()
-                .GET("/", serverRequest -> ServerResponse.ok().body(posts.findAll()))
-                .GET("/{id}", serverRequest -> {
-                    var id = Long.valueOf(serverRequest.pathVariable("id"));
-                    return posts.findById(id)
-                            .map(p -> ServerResponse.ok().body(p))
-                            .orElse(ServerResponse.notFound().build());
-                })
+    RouterFunction<ServerResponse> routerFunction(PostHandler postsHandler) {
+        var collectionRoutes = route(method(GET), postsHandler::findAll)
+                .andRoute(method(POST), postsHandler::create);
+        var singleRoutes = route(method(GET), postsHandler::findById)
+                .andRoute(method(PUT), postsHandler::update)
+                .andRoute(method(DELETE), postsHandler::deleteById);
+
+        return route()
+                .path("posts",
+                        () -> nest(path("{id}"), singleRoutes)
+                                .andNest(path(""), collectionRoutes)
+                )
                 .build();
     }
+}
 
+@Component
+@RequiredArgsConstructor
+class PostHandler {
+    private final PostRepository posts;
+
+    ServerResponse findAll(ServerRequest request) {
+        return ok().body(posts.findAll());
+    }
+
+    ServerResponse findById(ServerRequest request) {
+        var id = Long.parseLong(request.pathVariable("id"));
+        return this.posts.findById(id)
+                .map(p -> ok().body(p))
+                .orElse(notFound().build());
+    }
+
+    ServerResponse create(ServerRequest request) throws ServletException, IOException {
+        var data = request.body(Post.class);
+        var savedId = this.posts.create(data);
+        return ServerResponse.created(URI.create("/posts/" + savedId)).build();
+    }
+
+    ServerResponse update(ServerRequest request) throws ServletException, IOException {
+        var id = Long.parseLong(request.pathVariable("id"));
+        var data = request.body(Post.class);
+        var updatedCount = this.posts.update(id, data);
+
+        if (updatedCount > 0) {
+            return noContent().build();
+        } else {
+            return notFound().build();
+        }
+    }
+
+    ServerResponse deleteById(ServerRequest request) {
+        var id = Long.parseLong(request.pathVariable("id"));
+        var deletedCount = this.posts.deleteById(id);
+
+        if (deletedCount > 0) {
+            return noContent().build();
+        } else {
+            return notFound().build();
+        }
+    }
 }
 
 @Component
@@ -67,27 +129,75 @@ class PostRepository {
             rs.getString("content"),
             rs.getObject("created_at", LocalDateTime.class)
     );
-    private final NamedParameterJdbcTemplate template;
+    private final JdbcClient client;
 
     Stream<Post> findAll() {
-        var queryAll = """
+        var sql = """
                 SELECT * FROM posts
                 """;
-        return this.template.queryForStream(queryAll, Collections.emptyMap(), ROW_MAPPER);
+        return client.sql(sql)
+                .query(ROW_MAPPER)
+                .stream();
     }
 
     Optional<Post> findById(Long id) {
-        var queryById = """
+        var sql = """
                 SELECT * FROM posts where id=:id
                 """;
-        Post result = null;
-        try {
-            result = this.template.queryForObject(queryById, Map.of("id", id), ROW_MAPPER);
-        } catch (Exception e) {
-            log.error("find by id error: {}", e.getMessage());
-        }
+        return client.sql(sql)
+                .param("id", id)
+                .query(ROW_MAPPER)
+                .optional();
+    }
 
-        return Optional.ofNullable(result);
+    boolean existsById(Long id) {
+        var sql = """
+                SELECT EXISTS(SELECT 1 FROM posts where id=:id)
+                """;
+        return (boolean) client.sql(sql)
+                .param("id", id)
+                .query()
+                .singleValue();
+    }
+
+    Long create(Post post) {
+        var sql = """
+                INSERT INTO posts(title, content) VALUES (:title, :content) RETURNING id
+                """;
+
+        var keyHolder = new GeneratedKeyHolder();
+        var affectedRows = client.sql(sql)
+                .params(Map.of("title", post.title(), "content", post.content()))
+                .update(keyHolder);
+
+        log.debug("inserting post affected row: {}", affectedRows);
+        return keyHolder.getKey().longValue();
+    }
+
+    int update(Long id, Post post) {
+        var sql = """
+                UPDATE posts 
+                SET title=:title,
+                    content=:content
+                WHERE id=:id   
+                """;
+        int updatedRow = client.sql(sql)
+                .params(Map.of("title", post.title(), "content", post.content(), "id", id))
+                .update();
+        log.debug("updating post affected row: {}", updatedRow);
+        return updatedRow;
+    }
+
+    int deleteById(Long id) {
+        var sql = """
+                DELETE FROM posts WHERE id=:id
+                """;
+
+        int deletedRow = client.sql(sql)
+                .param("id", id)
+                .update();
+        log.debug("deleting post affected row: {}", deletedRow);
+        return deletedRow;
     }
 }
 

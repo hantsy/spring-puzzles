@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class DemoApplicationTests {
+class DemoApplicationWebClientTests {
     @LocalServerPort
     int port;
 
@@ -69,7 +69,5 @@ class DemoApplicationTests {
                 .consumeErrorWith(e -> assertThat(e).isInstanceOf(WebClientResponseException.class))
                 .verify();
     }
-
-
 
 }
