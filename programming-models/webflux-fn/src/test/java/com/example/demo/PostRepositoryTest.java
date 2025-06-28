@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,11 +22,7 @@ public class PostRepositoryTest {
 
     @Test
     void testCurd() {
-        long id = new Random(10).nextLong(10_000);
-        posts.create(new Post(id, "new title", "new content", null))
-                .as(StepVerifier::create)
-                .consumeNextWith(savedId -> assertThat(savedId).isEqualTo(id))
-                .verifyComplete();
+        long id =  posts.create(new Post(null, "new title", "new content", null)).block(Duration.ofMillis(5_0000));
 
         posts.findAll()
                 .as(StepVerifier::create)

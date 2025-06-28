@@ -1,33 +1,27 @@
 package com.example.demo
 
-import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitFirstOrElse
-import kotlinx.coroutines.reactive.awaitFirstOrNull
-import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.forEach
+import kotlinx.coroutines.flow.toList
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.runApplication
-import org.springframework.context.annotation.Bean
 import org.springframework.context.event.EventListener
-import org.springframework.core.io.ClassPathResource
 import org.springframework.data.annotation.Id
-import org.springframework.data.r2dbc.repository.R2dbcRepository
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
-import org.springframework.http.HttpStatus
-import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
-import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
-import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.data.repository.kotlin.CoroutineSortingRepository
+import org.springframework.http.ResponseEntity
+import org.springframework.http.ResponseEntity.*
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ServerWebExchange
+import java.net.URI
 import java.time.LocalDateTime
 
 @SpringBootApplication
 class DemoApplication
+
 fun main(args: Array<String>) {
     runApplication<DemoApplication>(*args)
 }
@@ -36,55 +30,65 @@ fun main(args: Array<String>) {
 class DataInitializer(private val posts: PostRepository) {
 
     @EventListener(value = [ApplicationReadyEvent::class])
-    fun init() {
+    suspend fun init() {
         println(" print initial data...")
-        runBlocking {
-            posts.findAll().subscribe { println(it) }
-        }
+        posts.findAll().collect { println("initial post: $it") }
     }
-
 }
 
 
 @RestController
-@RequestMapping("/")
-class PostController(private val postRepository: PostRepository) {
+@RequestMapping("/posts")
+class PostController(private val posts: PostRepository) {
 
     @GetMapping("")
-    fun findAll(): Flow<Post> =
-            postRepository.findAll().asFlow()
+    fun findAll(): Flow<Post> = posts.findAll()
 
     @GetMapping("{id}")
-    suspend fun findOne(@PathVariable id: Long): Post? =
-            postRepository.findById(id).awaitFirstOrElse { throw PostNotFoundException(id) }
+    suspend fun findOne(@PathVariable id: Long): ResponseEntity<Post> {
+        return posts.findById(id)
+            ?.let { ok(it) } ?: notFound().build()
+    }
 
     @PostMapping("")
-    suspend fun save(@RequestBody post: Post): Post =
-            postRepository.save(post).awaitSingle()
-
-}
-
-
-class PostNotFoundException(postId: Long) : RuntimeException("Post:$postId is not found...")
-
-@RestControllerAdvice
-class RestWebExceptionHandler {
-
-    @ExceptionHandler(PostNotFoundException::class)
-    suspend fun handle(ex: PostNotFoundException, exchange: ServerWebExchange) {
-
-        exchange.response.statusCode = HttpStatus.NOT_FOUND
-        exchange.response.setComplete().awaitFirstOrNull()
+    suspend fun save(@RequestBody post: Post): ResponseEntity<Any> {
+        val saved = posts.save(post)
+        return created(URI.create("/posts/" + saved.id)).build()
     }
+
+    @PutMapping("{id}")
+    suspend fun update(@PathVariable id: Long, @RequestBody post: Post): ResponseEntity<Any> {
+        val existed = posts.findById(id) ?: run {
+            return notFound().build()
+        }
+
+        val updated = existed.apply {
+            title = post.title
+            content = post.content
+        }
+        posts.save(updated)
+        return noContent().build()
+    }
+
+    @DeleteMapping("{id}")
+    suspend fun deleteById(@PathVariable id: Long): ResponseEntity<Any> {
+        if (!posts.existsById(id)) {
+            return notFound().build()
+        }
+        posts.deleteById(id)
+        return noContent().build()
+    }
+
 }
 
-interface PostRepository : R2dbcRepository<Post, Long>
+interface PostRepository : CoroutineCrudRepository<Post, Long>, CoroutineSortingRepository<Post, Long>
 
 @Table("posts")
-data class Post(@Id val id: Long? = null,
-                @Column("title") val title: String? = null,
-                @Column("content") val content: String? = null,
-                @Column("created_at") val createdAt: LocalDateTime? = null
+data class Post(
+    @Id val id: Long? = null,
+    @Column("title") var title: String? = null,
+    @Column("content") var content: String? = null,
+    @Column("created_at") val createdAt: LocalDateTime? = null
 )
 
 

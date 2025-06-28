@@ -1,22 +1,28 @@
 package com.example.demo
 
 
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.toEntity
 import reactor.kotlin.test.test
+import kotlin.random.Random
 
 @Import(TestcontainersConfiguration::class)
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DemoApplicationTests {
 
     private lateinit var client: WebClient
 
+    @LocalServerPort
     private var port: Int = 8080
 
     @BeforeEach
@@ -27,7 +33,7 @@ class DemoApplicationTests {
     @Test
     fun `get all posts`() {
         client.get()
-                .uri("/")
+                .uri("/posts")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchangeToFlux {
                     assertThat(it.statusCode()).isEqualTo(HttpStatus.OK)
@@ -36,6 +42,29 @@ class DemoApplicationTests {
                 .test()
                 .expectNextCount(2)
                 .verifyComplete()
+    }
+
+    @Test
+    fun `get post by id that not existed`() {
+        client.get()
+            .uri { uri -> uri.path("/posts/{id}").build(Random(20).nextLong(10_000)) }
+            .accept(MediaType.APPLICATION_JSON)
+            .retrieve()
+            .toEntity<Post>()
+            .test()
+            .consumeErrorWith { it.shouldBeInstanceOf<WebClientResponseException>() }
+            .verify()
+    }
+
+    @Test
+    fun `delete post by id that not existed`() {
+        client.delete()
+            .uri { uri -> uri.path("/posts/{id}").build(Random(20).nextLong(10_000)) }
+            .retrieve()
+            .toEntity<Void>()
+            .test()
+            .consumeErrorWith { it.shouldBeInstanceOf<WebClientResponseException>()  }
+            .verify()
     }
 
 }

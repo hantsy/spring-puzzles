@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import io.r2dbc.spi.Row;
+import io.r2dbc.spi.RowMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -13,6 +15,7 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.data.relational.core.query.Update;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -22,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.function.BiFunction;
 
 import static org.springframework.data.relational.core.query.Criteria.where;
 import static org.springframework.data.relational.core.query.Query.query;
@@ -122,37 +126,87 @@ class PostHandler {
 @RequiredArgsConstructor
 class PostRepository {
 
-    private final R2dbcEntityTemplate template;
+    private final DatabaseClient client;
 
-    Flux<Post> findAll() {
-        return this.template.select(Post.class).all();
+    public static final BiFunction<Row, RowMetadata, Post> ROW_MAPPER = (row, meta) -> new Post(
+            row.get("id", Long.class),
+            row.get("title", String.class),
+            row.get("content", String.class),
+            row.get("created_at", LocalDateTime.class)
+    );
+
+    public Flux<Post> findAll() {
+        String sql = """
+            SELECT id, title, content, created_at
+            FROM posts
+        """;
+        return client.sql(sql)
+                .map(ROW_MAPPER)
+                .all();
     }
 
-    Flux<Post> findByTitleLike(String title) {
-        return this.template.select(query(where("title").like("%" + title + "%")), Post.class);
+    public Flux<Post> findByTitleLike(String title) {
+        String sql = """
+            SELECT id, title, content, created_at
+            FROM posts
+            WHERE title LIKE :title
+        """;
+        return client.sql(sql)
+                .bind("title", "%" + title + "%")
+                .map(ROW_MAPPER)
+                .all();
     }
 
-    Mono<Post> findById(Long id) {
-        return this.template.selectOne(query(where("id").is(id)), Post.class);
+    public Mono<Post> findById(Long id) {
+        String sql = """
+            SELECT id, title, content, created_at
+            FROM posts
+            WHERE id = :id
+        """;
+        return client.sql(sql)
+                .bind("id", id)
+                .map(ROW_MAPPER)
+                .one();
     }
 
-    Mono<Long> create(Post data) {
-        return this.template.insert(data).map(Post::id);
+    public Mono<Long> create(Post data) {
+        String sql = """
+            INSERT INTO posts (title, content)
+            VALUES (:title, :content)
+            RETURNING id
+        """;
+        return client.sql(sql)
+                .bind("title", data.title())
+                .bind("content", data.content())
+                .map((row, meta) -> row.get("id", Long.class))
+                .one();
     }
 
-    Mono<Long> update(Long id, Post data) {
-        return this.template
-                .update(query(where("id").is(id)),
-                        Update.update("title", data.title()).set("content", data.content()),
-                        Post.class);
-
+    public Mono<Long> update(Long id, Post data) {
+        String sql = """
+            UPDATE posts
+            SET title = :title, content = :content
+            WHERE id = :id
+        """;
+        return client.sql(sql)
+                .bind("title", data.title())
+                .bind("content", data.content())
+                .bind("id", id)
+                .fetch()
+                .rowsUpdated();
     }
 
-    Mono<Long> deleteById(Long id) {
-        return this.template.delete(query(where("id").is(id)), Post.class);
+    public Mono<Long> deleteById(Long id) {
+        String sql = """
+            DELETE FROM posts
+            WHERE id = :id
+        """;
+        return client.sql(sql)
+                .bind("id", id)
+                .fetch()
+                .rowsUpdated();
     }
 }
-
 
 @Table(value = "posts")
 record Post(
