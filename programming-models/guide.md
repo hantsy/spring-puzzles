@@ -39,7 +39,7 @@ The REST API for managing `POST` entities will support the following operations:
 | PUT /posts/{id} | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 204                                                             |
 | DELETE /posts/{id} |                                               | status: 204                                                             |
 
-The primary focus of this post is on building RESTful services using various combinations of Spring technologies, including WebMvc or WebFlux, with annotated controllers or functional routers. We’ll discuss persistence options in a future post.
+This post will focus on building RESTful services using various Spring technologies, including WebMvc and WebFlux, leveraging both annotated controllers and functional routers. We'll demonstrate how each model can be used to achieve the same RESTful API, allowing you to choose the approach that best fits your project's needs.
 
 ---
 
@@ -105,7 +105,7 @@ class PostController {
 }
 ```
 
-This is a classic Spring controller class, familiar to anyone who has worked with Spring before.
+This is a classic Spring controller class, familiar to anyone who has worked with the Spring framework before.
 
 * The `@RestController` annotation designates this class as a RESTful API controller. It is a meta-annotation built on top of the general-purpose `@Controller`.
 * The class-level `@RequestMapping` sets the base path for all endpoints in this controller.
@@ -116,5 +116,96 @@ This is a classic Spring controller class, familiar to anyone who has worked wit
 * The `getById` method retrieves a post by its ID. If the post exists, it returns the post in the response body with a 200 (OK) status; otherwise, it responds with a 404 (Not Found).
 * The `update` method updates an existing post. If the post is found and updated successfully, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found).
 * The `deleteById` method deletes a post by its ID. If the deletion is successful, it returns a 204 (No Content) status; if the post does not exist, it responds with a 404 (Not Found).
+
+The [complete example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webmvc) is available on GitHub.
+
+
+---
+
+## WebMvc + Functional Router
+
+Let’s see how you can use a [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/function/RouterFunction.html) bean to replace the `PostController` we built earlier.
+
+Start by creating a new project, using the same settings as described in [WebMvc + Annotated Controllers](#WebMvc + Annotated Controllers). However, this time, instead of the declarative `Repository` interface, we reimplement the CRUD operations in [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L122-L202) using the new [JdbcClient introduced in Spring 6](https://hantsy.medium.com/an-introduction-to-spring-jdbcclient-api-20e833d7b0f3).
+
+Next, declare a `RouterFunction` bean inside a Spring `@Configuration` class as shown below:
+
+```java
+@Configuration
+class WebConfig {
+
+    @Bean
+    RouterFunction<ServerResponse> routerFunction(PostHandler postsHandler) {
+        var collectionRoutes = route(method(GET), postsHandler::findAll)
+                .andRoute(method(POST), postsHandler::create);
+        var singleRoutes = route(method(GET), postsHandler::findById)
+                .andRoute(method(PUT), postsHandler::update)
+                .andRoute(method(DELETE), postsHandler::deleteById);
+
+        return route()
+                .path("posts",
+                        () -> nest(path("{id}"), singleRoutes)
+                                .andNest(path(""), collectionRoutes)
+                )
+                .build();
+    }
+}
+```
+
+The `RouterFunctions.route()` method lets you build up a `RouterFunction` using a clean, fluent builder API. You can use the `nest` method to define subroutes under a common path. Each route requires a `RequestPredicate`, which specifies details such as the request path, HTTP method, accepted media types, or content type, as well as a `HandlerFunction` that processes the request. The `RequestPredicates` utility class provides convenient methods for constructing these predicates. A `HandlerFunction` is just a functional interface that takes a `ServerRequest` and returns a `ServerResponse`. Once all routes are defined, calling `build()` assembles them into a `RouterFunction<ServerResponse>`.
+
+Notice that the handler functions are provided as method references to the corresponding methods in the [`PostHandler`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L76-L120) bean, allowing you to centralize your request handling logic.
+
+Here’s what the `PostHandler` class looks like:
+
+```java
+@Component
+@RequiredArgsConstructor
+class PostHandler {
+    private final PostRepository posts;
+
+    ServerResponse findAll(ServerRequest request) {
+        return ok().body(posts.findAll());
+    }
+
+    ServerResponse findById(ServerRequest request) {
+        var id = Long.parseLong(request.pathVariable("id"));
+        return this.posts.findById(id)
+                .map(p -> ok().body(p))
+                .orElse(notFound().build());
+    }
+
+    ServerResponse create(ServerRequest request) throws ServletException, IOException {
+        var data = request.body(Post.class);
+        var savedId = this.posts.create(data);
+        return ServerResponse.created(URI.create("/posts/" + savedId)).build();
+    }
+
+    ServerResponse update(ServerRequest request) throws ServletException, IOException {
+        var id = Long.parseLong(request.pathVariable("id"));
+        var data = request.body(Post.class);
+        var updatedCount = this.posts.update(id, data);
+
+        if (updatedCount > 0) {
+            return noContent().build();
+        } else {
+            return notFound().build();
+        }
+    }
+
+    ServerResponse deleteById(ServerRequest request) {
+        var id = Long.parseLong(request.pathVariable("id"));
+        var deletedCount = this.posts.deleteById(id);
+
+        if (deletedCount > 0) {
+            return noContent().build();
+        } else {
+            return notFound().build();
+        }
+    }
+}
+```
+
+This class is a straightforward Spring `@Component`, with each method serving as an implementation of `HandlerFunction`. The logic for handling each HTTP request type—listing, fetching, creating, updating, and deleting posts—is cleanly separated into methods, making the code easy to follow and maintain.
 
 ---
