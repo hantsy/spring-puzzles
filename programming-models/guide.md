@@ -1,4 +1,4 @@
-# 6 Programming Models You Must Know When Building RESTful Services with Spring Boot
+# Six Programming Models You Must Know When Building RESTful Services with Spring Boot
 
 Over the past few years, [Spring Framework](https://spring.io/projects/spring-framework) has rapidly evolved, bringing a wide array of innovations that empower developers to build robust and modern RESTful services with ease. Since Spring 5.0, it has adopted new paradigms and technologies that reflect the changing landscape of software development.
 
@@ -14,28 +14,102 @@ For a developer building RESTful services with Spring Boot, you now have a varie
 
 In this article, we will explore **six essential programming models** that every Spring Boot developer should be familiar with when building RESTful services.
 
-## Prerequitions 
-I assumed you have installed the following software:
+---
 
-* **Apache Maven 3.9 or 4.0**: We used Maven here, and do not stop you from using Gradle. You can freely convert the Maven POM to Gradle scripts.
+## Prerequisites
+
+Before you begin, make sure you have the following software installed:
+
+* **Apache Maven 3.9 or 4.0**: We use Maven in these examples, but you’re welcome to use Gradle if you prefer. You can easily convert the provided Maven POM files to Gradle scripts.
 * **Java 21**
-* **Docker**, especially Docker Desktop for Windows users.
+* **Docker** (Docker Desktop is recommended for Windows users)
+* Your favorite IDE, eg, IntelliJ IDEA Community Edition, or VS Code, etc.
 
-We will use PostgreSQL as the database and a [Docker Compose](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/docker-compose.yml) file to serve the database service at runtime. We will utilize Testcontainers to manage the database service when running test code. We use the same scripts to initialize the database for all projects mentioned in this post, including additional schema and initial scripts. For more information, refer to [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql). We mainly discuss building RESTful services using different combinations, such as WebMvc or WebFlux, Annotated Controllers or Functional Routers. We will talk about the data persistence options in the future.
+As usual, we’ll use the blog example project to demonstrate each feature. 
 
+For our database, we’ll use PostgreSQL. A [Docker Compose](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/docker-compose.yml) file is provided to spin up the database service during development. When running tests, we’ll rely on Testcontainers to manage the database for us. Both approaches use the same scripts to initialize the database, including schema and seed data. You can find these scripts in [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql).
 
+The REST API for managing `POST` entities will support the following operations:
 
+| URI             | REQUEST                                         | RESPONSE                                                                |
+|-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
+| GET /posts      | accept: application/json                        | status: 200<br>[{"id":1, "title":"post title", ...}]                    |
+| POST /posts     | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 201<br>location: /posts/&lt;newid&gt;                            |
+| GET /posts/{id} | accept: application/json                        | status: 200<br>{"id":1, "title":"post title", ...}                      |
+| PUT /posts/{id} | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 204                                                             |
+| DELETE /posts/{id} |                                               | status: 204                                                             |
 
-  
+The primary focus of this post is on building RESTful services using various combinations of Spring technologies, including WebMvc or WebFlux, with annotated controllers or functional routers. We’ll discuss persistence options in a future post.
+
+---
+
 ## WebMvc + Annotated Controllers
 
-This is the typical use case that has existed in Spring for a long time. Let's create a project using https://start.spring.io.
+This is the classic approach that has been part of Spring for years. Let's start by generating a project at [start.spring.io](https://start.spring.io):
 
 * Project: **Maven**
 * Java: **21** 
 * Spring Boot: **3.5**
-* Dependencies: *Web*, *Data Jdbc*, *Postgres*, *Testcontainers*, *Lombok* etc.
+* Dependencies: *Web*, *Data JDBC*, *PostgreSQL*, *Testcontainers*, *Lombok*, etc.
 
+Extract the download project skeleton, and create the table mapped entity class - [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L94-L108), and a [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L91) interface that extends `CrudRepository`.
 
+Also create the  [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql) in the project *src/main/resources* folder, and set the `spring.sql.init.mode=always` in the *application.properties* to activate the database scripts and ensure they are always exectued at application startup. 
 
+Let's move on to the [`PostController`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L44-L89) class. 
+
+```java
+@RestController
+@RequestMapping("/posts")
+@RequiredArgsConstructor
+class PostController {
+    private final PostRepository posts;
+
+    @GetMapping()
+    public ResponseEntity<?> getAll() {
+        return ok(posts.findAll());
+    }
+
+    @PostMapping()
+    public ResponseEntity<?> save(@RequestBody Post body) {
+        var saved = this.posts.save(body);
+        return ResponseEntity.created(URI.create("/posts/" + saved.id())).build();
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
+        return this.posts.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(notFound().build());
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Post body) {
+        return this.posts.findById(id)
+                .map(existed -> new Post(existed.id(), body.title(), body.content(), existed.createdAt()))
+                .map(this.posts::save)
+                .map(post -> ResponseEntity.noContent().build())
+                .orElse(notFound().build());
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deletedById(@PathVariable("id") Long id) {
+        return Optional.of(this.posts.existsById(id))
+                .filter(it -> it)
+                .map(deleted -> {
+                    this.posts.deleteById(id);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElse(notFound().build());
+    }
+}
+```
+
+This controller provides the following RESTful API features:
+
+* The `getAll` method retrieves all posts and returns them as a list in the response body with a 200 (OK) status code.
+* The `save` method creates a new post, responds with a 201 (Created) status code, and includes the URI of the newly created entity in the `Location` header.
+* The `getById` method fetches a post by its ID. If the post exists, it returns the post in the response body with a 200 (OK) status. If not found, it responds with a 404 (Not Found) status.
+* The `update` method updates an existing post. If the post is found and updated successfully, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found) status.
+* The `deleteById` method deletes a post by its ID. On successful deletion, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found) status.
 
