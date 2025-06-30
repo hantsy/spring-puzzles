@@ -52,11 +52,11 @@ This is the classic approach that has been part of Spring for years. Let's start
 * Spring Boot: **3.5**
 * Dependencies: *Web*, *Data JDBC*, *PostgreSQL*, *Testcontainers*, *Lombok*, etc.
 
-Extract the download project skeleton, and create the table mapped entity class - [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L94-L108), and a [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L91) interface that extends `CrudRepository`.
+Extract the project skeleton and import the code into your IDE. Then implement the table-mapped entity class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L94-L108). Next, create a [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L91) interface that extends `CrudRepository`.
 
-Also create the  [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql) in the project *src/main/resources* folder, and set the `spring.sql.init.mode=always` in the *application.properties* to activate the database scripts and ensure they are always exectued at application startup. 
+Additionally, add [`schema.sql`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [`data.sql`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql) files to the project’s *src/main/resources* directory. Be sure to set `spring.sql.init.mode=always` in *application.properties* so these database scripts are always executed when the application starts.
 
-Let's move on to the [`PostController`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L44-L89) class. 
+Once that’s done, let’s move on to the [`PostController`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/java/com/example/demo/DemoApplication.java#L44-L89) class.
 
 ```java
 @RestController
@@ -105,11 +105,16 @@ class PostController {
 }
 ```
 
-This controller provides the following RESTful API features:
+This is a classic Spring controller class, familiar to anyone who has worked with Spring before.
 
+* The `@RestController` annotation designates this class as a RESTful API controller. It is a meta-annotation built on top of the general-purpose `@Controller`.
+* The class-level `@RequestMapping` sets the base path for all endpoints in this controller.
+* `@RequiredArgsConstructor` simplifies constructor injection by automatically generating a constructor for all final fields at compile time.
+* HTTP method-specific annotations like `@GetMapping`, `@PostMapping`, `@PutMapping`, and `@DeleteMapping` are meta-annotations based on `@RequestMapping`, and define sub-paths relative to the class-level mapping.
 * The `getAll` method retrieves all posts and returns them as a list in the response body with a 200 (OK) status code.
-* The `save` method creates a new post, responds with a 201 (Created) status code, and includes the URI of the newly created entity in the `Location` header.
-* The `getById` method fetches a post by its ID. If the post exists, it returns the post in the response body with a 200 (OK) status. If not found, it responds with a 404 (Not Found) status.
-* The `update` method updates an existing post. If the post is found and updated successfully, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found) status.
-* The `deleteById` method deletes a post by its ID. On successful deletion, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found) status.
+* The `save` method creates a new post, responds with a 201 (Created) status code, and includes the URI of the new entity in the `Location` header.
+* The `getById` method retrieves a post by its ID. If the post exists, it returns the post in the response body with a 200 (OK) status; otherwise, it responds with a 404 (Not Found).
+* The `update` method updates an existing post. If the post is found and updated successfully, it returns a 204 (No Content) status. If the post does not exist, it responds with a 404 (Not Found).
+* The `deleteById` method deletes a post by its ID. If the deletion is successful, it returns a 204 (No Content) status; if the post does not exist, it responds with a 404 (Not Found).
 
+---
