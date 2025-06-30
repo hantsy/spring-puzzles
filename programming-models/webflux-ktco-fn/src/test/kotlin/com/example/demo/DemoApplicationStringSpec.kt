@@ -15,27 +15,26 @@ import reactor.kotlin.test.test
 class DemoApplicationStringSpec(
     @field:LocalServerPort var port: Int = 8080
 ) : StringSpec(
-/*{
+    /*{
+        lateinit var client: WebClient
 
-    lateinit var client: WebClient
+        beforeEach {
+            client = WebClient.create("http://localhost:$port")
+        }
 
-    beforeEach {
-        client = WebClient.create("http://localhost:$port")
-    }
-
-    "get all posts" {
-        client.get()
-            .uri("/posts")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchangeToFlux {
-                assertThat(it.statusCode()).isEqualTo(HttpStatus.OK)
-                it.bodyToFlux(Post::class.java)
-            }
-            .test()
-            .expectNextCount(2)
-            .verifyComplete()
-    }
-}*/
+        "get all posts" {
+            client.get()
+                .uri("/posts")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchangeToFlux {
+                    assertThat(it.statusCode()).isEqualTo(HttpStatus.OK)
+                    it.bodyToFlux(Post::class.java)
+                }
+                .test()
+                .expectNextCount(2)
+                .verifyComplete()
+        }
+    }*/
 ) {
     init {
         lateinit var client: WebClient

@@ -2,7 +2,6 @@ package com.example.demo
 
 import io.kotest.core.spec.style.FunSpec
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
@@ -14,12 +13,13 @@ import reactor.kotlin.test.test
 @Import(TestcontainersConfiguration::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class DemoApplicationFuncSpec(
-    @field:LocalServerPort var port: Int = 8080
+    @field:LocalServerPort var port: Int?
 ) : FunSpec() {
     init {
         lateinit var client: WebClient
 
         beforeEach {
+            println("beforeEach:::local server port:$port")
             client = WebClient.create("http://localhost:$port")
         }
 
