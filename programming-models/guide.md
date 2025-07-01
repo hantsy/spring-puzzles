@@ -444,13 +444,86 @@ Grab the [full example code](https://github.com/hantsy/spring-puzzles/blob/maste
 
 Based on the WebFlux [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html), Spring provides a Kotlin DSL - [CoRouterFunctionDsl](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html) and allows you to write route functions in a `coRouter{}` context block.
 
-Create a new project using the same settings in *WebFlux + Kotlin Coroutines + Annotated Controllers* section.
+Create a new project using the same settings in the *WebFlux + Kotlin Coroutines + Annotated Controllers* section.
 
-Delcare a bean in the Spring `@Configuration` class..
+Declare a bean in the Spring `@Configuration` class..
 
+```kotlin
+@Configuration
+class WebConfig {
 
+    @Bean
+    fun routes(postHandler: PostHandler) = coRouter {
+        "/posts".nest {
+            "{id}".nest {
+                GET(accept(MediaType.APPLICATION_JSON), postHandler::get)
+                PUT(contentType(APPLICATION_JSON), postHandler::update)
+                DELETE("", postHandler::delete)
+            }
+            GET(accept(MediaType.APPLICATION_JSON), postHandler::all)
+            POST(contentType(APPLICATION_JSON), postHandler::create)
+        }
+    }
+}
+```
 
+The related `PostHandler` looks like.
 
+```kotlin
+@Component
+class PostHandler(private val posts: PostRepository) {
 
+    suspend fun all(req: ServerRequest): ServerResponse {
+        return ok().bodyAndAwait(this.posts.findAll())
+    }
 
+    suspend fun create(req: ServerRequest): ServerResponse {
+        val body = req.awaitBody<CreatePostRequest>()
+        val createdPost = this.posts.create(body)
+        return created(URI.create("/$createdPost")).buildAndAwait()
+    }
 
+    suspend fun get(req: ServerRequest): ServerResponse {
+        println("path variable::${req.pathVariable("id")}")
+        val foundPost = this.posts.findById(req.pathVariable("id").toLong())
+        println("found post:$foundPost")
+        return when {
+            foundPost != null -> ok().bodyValueAndAwait(foundPost)
+            else -> notFound().buildAndAwait()
+        }
+    }
+
+    suspend fun update(req: ServerRequest): ServerResponse {
+        val id = req.pathVariable("id").toLong()
+        val body = req.awaitBody<UpdatePostRequest>()
+        val updated = this.posts.update(id, body)
+        return when {
+            updated > 0 -> noContent().buildAndAwait()
+            else -> notFound().buildAndAwait()
+        }
+    }
+
+    suspend fun delete(req: ServerRequest): ServerResponse {
+        val deletedCount = this.posts.deleteById(req.pathVariable("id").toLong())
+        println("$deletedCount posts deleted")
+        return when {
+            deletedCount > 0 -> noContent().buildAndAwait()
+            else -> notFound().buildAndAwait()
+        }
+    }
+}
+```
+
+The `xxxAwait` functions you see in the code above are actually extension methods on the Reactor/ReactiveStreams APIs. They let you turn reactive calls into `suspend` functions, making your code more readable and coroutine-friendly.
+
+Want to try it out for yourself? Grab a copy of the [working example](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco-fn) from GitHub and experiment with it.
+
+## Bonus
+
+Suppose you’re impressed by the concise syntax offered by [CoRouterFunctionDsl](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html). In that case, you’ll be happy to know that Spring also provides Kotlin DSL extensions for [WebMvc RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webmvc/org.springframework.web.servlet.function/-router-function-dsl/index.html) and [WebFlux RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-router-function-dsl/index.html) to declare routes in a clean, idiomatic way. You can even define beans using [BeanDefinitionDsl](https://docs.spring.io/spring-framework/docs/6.2.8/kdoc-api/spring-context/org.springframework.context.support/-bean-definition-dsl/index.html), making your configuration more concise and declarative.
+
+Curious to see WebMvc’s RouterFunctionDsl in action? Check out [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc) and explore the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc/src/main/kotlin/com/example/demo/DemoApplication.kt#L154-L175).
+
+Want to dive into the WebFlux RouterFunctionDsl? Have a look at [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux) and review the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux/src/main/kotlin/com/example/demo/DemoApplication.kt#L119-L142).
+
+There’s also an experimental Spring project called [Spring Fu](https://github.com/spring-projects-experimental/spring-fu) that aims to bring a complete DSL approach to building Spring applications. Although development is currently paused, it’s still an interesting project to check out if you’re curious about functional programming and DSL support in Spring.
