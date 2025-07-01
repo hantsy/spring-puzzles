@@ -368,6 +368,86 @@ Check out the [full example project](https://github.com/hantsy/spring-puzzles/tr
 
 ## WebFlux + Kotlin Coroutines + Annotated Controllers
 
+Kotlin Coroutines is a core Kotlin library that enables structured concurrency concisely and efficiently. Coroutines simplify asynchronous code by allowing you to write it imperatively, using the `suspend` keyword to mark functions as continuations that can be paused and resumed without blocking threads. For handling streams of data asynchronously, coroutines provide the `Flow` API, which supports reactive-style operations.
+
+Since Spring 5, Kotlin has been a first-class citizen in the Spring ecosystem. Building on top of its Reactive Streams support, Spring adds seamless integration with Kotlin Coroutines:
+* The coroutine context can interoperate with the Reactor context.
+* In addition to the Kotlin extensions available in [`reactor-kotlin-extensions`](https://github.com/reactor/reactor-kotlin-extensions) and [`kotlinx-coroutines-reactor`](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-reactor/), Spring provides many extension functions to bridge Kotlin Coroutines and Reactive Streams APIs.
+* Many Spring components, such as `@Component`, `@EventListener`, and `WebFilter`, natively support suspending functions, allowing you to use `suspend` functions just like regular Kotlin functions.
+
+> [!NOTE]
+> For more details, refer to the [Kotlin Coroutines official guide](https://kotlinlang.org/docs/coroutines-guide.html#table-of-contents).
+
+To get started, create a new project at [start.spring.io](https://start.spring.io) with the following settings:
+- Project: **Maven**
+- Language: **Kotlin**
+- Project Metadata: Java **21**
+- Spring Boot: **3.5**
+- Dependencies: *Reactive Web*, *Data R2dbc*, *PostgreSQL*, *Testcontainers*, etc. 
+
+Here, we choose **Kotlin** as the programming language. Due to its concise syntax, we also remove **Lombok** from the dependencies. 
+
+Create a data class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L86C1-L92C2) to present the table mapped entity, and related [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L84), which extends a coroutine-aware [`CoroutineCrudRepository`](https://docs.spring.io/spring-data/jpa/reference/data-commons/kotlin/coroutines.html).
+
+Then let's move on to [`PostController`] class.
+
+```kotlin
+@RestController
+@RequestMapping("/posts")
+class PostController(private val posts: PostRepository) {
+
+    @GetMapping("")
+    fun findAll(): Flow<Post> = posts.findAll()
+
+    @GetMapping("{id}")
+    suspend fun findOne(@PathVariable id: Long): ResponseEntity<Post> {
+        return posts.findById(id)
+            ?.let { ok(it) } ?: notFound().build()
+    }
+
+    @PostMapping("")
+    suspend fun save(@RequestBody post: Post): ResponseEntity<Any> {
+        val saved = posts.save(post)
+        return created(URI.create("/posts/" + saved.id)).build()
+    }
+
+    @PutMapping("{id}")
+    suspend fun update(@PathVariable id: Long, @RequestBody post: Post): ResponseEntity<Any> {
+        val existed = posts.findById(id) ?: run {
+            return notFound().build()
+        }
+
+        val updated = existed.apply {
+            title = post.title
+            content = post.content
+        }
+        posts.save(updated)
+        return noContent().build()
+    }
+
+    @DeleteMapping("{id}")
+    suspend fun deleteById(@PathVariable id: Long): ResponseEntity<Any> {
+        if (!posts.existsById(id)) {
+            return notFound().build()
+        }
+        posts.deleteById(id)
+        return noContent().build()
+    }
+
+}
+```
+The controller is very similar to the WebMvc version.  It replaces the Reactor `Mono/Flux` codes with a simple `suspend` modifier on the functions.
+
+Grab the [full example code](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/) from GitHub and explore it yourself.
+
+## WebFlux + Kotlin Coroutines + Functional Router
+
+Based on the WebFlux [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html), Spring provides a Kotlin DSL - [CoRouterFunctionDsl](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html) and allows you to write route functions in a `coRouter{}` context block.
+
+Create a new project using the same settings in *WebFlux + Kotlin Coroutines + Annotated Controllers* section.
+
+Delcare a bean in the Spring `@Configuration` class..
+
 
 
 
