@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <!--    <ResourceLink auth="Container" name="jdbc/testDS" global="jdbc/testDS" type="javax.sql.DataSource" />-->
+    <Resource name="jdbc/testDS" auth="Container" type="javax.sql.DataSource"
+              maxTotal="50" maxIdle="30" maxWaitMillis="10000"
+              username="system" password="Passw0rd"
+              driverClassName="oracle.jdbc.driver.OracleDriver"
+              url="jdbc:oracle:thin:@localhost:1521:xe"/>
+</Context>

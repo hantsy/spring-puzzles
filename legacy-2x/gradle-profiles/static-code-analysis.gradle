@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'com.github.spotbugs:spotbugs-gradle-plugin:3.0.0'
+        classpath 'de.aaschmid:gradle-cpd-plugin:3.1'
+    }
+}
+
+apply plugin: 'checkstyle'
+apply plugin: 'pmd'
+// Have to refer to plugin class directly. See https://github.com/gradle/gradle-native/issues/742
+apply plugin: com.github.spotbugs.SpotBugsPlugin
+apply plugin: de.aaschmid.gradle.plugins.cpd.CpdPlugin
+
+checkstyle {
+    config = resources.text.fromFile('checkstyle.xml', 'UTF-8')
+    showViolations = true
+    ignoreFailures = false
+    toolVersion = '8.27'
+    maxWarnings = 0
+}
+
+pmd {
+    toolVersion = '6.18.0'
+    ignoreFailures = false
+    consoleOutput = true
+    ruleSetConfig = resources.text.fromFile("pmd-rules.xml")
+}
+
+spotbugs {
+    // TODO: Get off of beta version once 4.x is released.
+    // TODO: Print violations in console if they ever add support.
+    toolVersion = '4.0.0-beta4'
+    ignoreFailures = false
+    effort = 'max'
+}
+
+// generate an HTML report instead of XML for both main and test spotbugs tasks
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
+    reports.xml.enabled = false
+    reports.html.enabled = true
+}
+
+cpd {
+    language = 'java'
+    toolVersion = '6.1.0'
+    minimumTokenCount = 100  // approximately 5-10 lines
+}
+
+cpdCheck {
+    ignoreAnnotations = true
+
+    reports {
+        text.enabled = true
+        xml.enabled = false
+    }
+}
