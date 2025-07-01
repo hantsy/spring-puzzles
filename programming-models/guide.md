@@ -2,13 +2,13 @@
 
 In recent years, the [Spring Framework](https://spring.io/projects/spring-framework) has evolved quickly, introducing many new features that help developers build robust and modern RESTful services more easily. Since Spring 5.0, it has adopted new paradigms and technologies that reflect the changing world of software development.
 
-One of the most important changes is the adoption of the **[Reactive Streams](https://www.reactive-streams.org/)** standard. This brings a reactive programming model as a powerful alternative to the traditional servlet-based WebMvc stack. With this, developers can build highly scalable, event-driven web applications that handle many concurrent connections efficiently.
+One of the most important changes is the adoption of the **[Reactive Streams](https://www.reactive-streams.org/)** standard. This introduces a reactive programming model as a powerful alternative to the traditional servlet-based WebMvc stack. With this, developers can build highly scalable, event-driven web applications that efficiently handle numerous concurrent connections.
 
-At the same time, the growing popularity of **Kotlin** on the JVM has led Spring to offer first-class support for the language, including seamless integration with [Kotlin Coroutines](https://docs.spring.io/spring-framework/reference/languages/kotlin.html#kotlin-coroutines). This allows developers to write concise, asynchronous, and non-blocking code in a style that feels like traditional imperative programming.
+At the same time, the growing popularity of **Kotlin** on the JVM has led Spring to offer first-class support for the language, including seamless integration with **[Kotlin Coroutines](https://docs.spring.io/spring-framework/reference/languages/kotlin.html#kotlin-coroutines)**. This allows developers to write concise, asynchronous, and non-blocking code in a style that feels like traditional imperative programming.
 
-Functional programming concepts are also becoming more common in Java development. Spring has responded by introducing the **[RouterFunction](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)** API, which lets developers define web handling in a functional, declarative way.
+Functional programming concepts are also becoming more common in Java development. Spring has responded by introducing the **[RouterFunction](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)** API, which enables developers to define web handling in a functional, declarative manner.
 
-Spring has even backported RouterFunction and the Kotlin DSL to the traditional WebMvc stack, bridging the gap between imperative and reactive programming styles.
+Spring has even backported **RouterFunction** and the **Kotlin DSL** to the traditional WebMvc stack, bridging the gap between imperative and reactive programming styles.
 
 As a developer building RESTful services with Spring Boot, you now have several powerful programming models to choose from, such as WebMvc or WebFlux for the tech stack, and annotated controllers or functional routers for code style.
 
@@ -39,7 +39,7 @@ The REST API for managing `POST` entities will support the following operations:
 | PUT /posts/{id} | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 204                                                             |
 | DELETE /posts/{id} |                                               | status: 204                                                             |
 
-This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll show how each model can be used to build the same RESTful API, so you can choose the approach that best fits your project.
+This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll demonstrate how each model can be utilized to build the same RESTful API, allowing you to select the approach that best suits your project.
 
 ---
 
@@ -127,7 +127,7 @@ The [complete example project](https://github.com/hantsy/spring-puzzles/tree/mas
 
 Let’s see how you can use a [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/function/RouterFunction.html) bean to replace the `PostController` we built earlier.
 
-Start by creating a new project, using the same settings as described in [WebMvc + Annotated Controllers](#webmvc--annotated-controllers). However, this time, instead of the declarative `Repository` interface, we reimplement the CRUD operations in [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L122-L202) using the new [JdbcClient introduced in Spring 6](https://hantsy.medium.com/an-introduction-to-spring-jdbcclient-api-20e833d7b0f3).
+Start by creating a new project, using the same settings as described in the *WebMvc + Annotated Controllers* section. However, this time, instead of the declarative `Repository` interface, we reimplement the CRUD operations in [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L122-L202) using the new [JdbcClient introduced in Spring 6](https://hantsy.medium.com/an-introduction-to-spring-jdbcclient-api-20e833d7b0f3).
 
 Next, declare a `RouterFunction` bean inside a Spring `@Configuration` class as shown below:
 
@@ -281,13 +281,13 @@ class PostController {
     }
 }
 ```
-The controller above is very similar to a traditional WebMvc controller, but it uses Reactor’s APIs to enable fully non-blocking, reactive data processing. Instead of returning `ResponseEntity<List<BodyType>>` or `ResponseEntity<BodyType>` as in classic controllers, this WebFlux controller returns `ResponseEntity<Flux<BodyType>>` for streaming multiple results, and `Mono<ResponseEntity<BodyType>>` for single-result or empty responses.
+The controller above is very similar to the WebMvc version, but it uses Reactor’s APIs to enable fully non-blocking, reactive data processing. Instead of returning `ResponseEntity<List<BodyType>>` or `ResponseEntity<BodyType>` as in classic controllers, this WebFlux controller returns `ResponseEntity<Flux<BodyType>>` for streaming multiple results, and `Mono<ResponseEntity<BodyType>>` for single-result or empty responses.
 
 The [complete example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webflux) is available on GitHub.
 
 ## WebFlux + Functional Router
 
-Functional programming has become more popular in the development community. As an alternative to annotated controllers, Spring 5 introduced [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html), which allows you to define web routes using builder-style, fluent APIs. This approach has also been brought back to the classic WebMVC/Servlet stack, which we already introduced in the *WebMvc + Functional Router* section.
+Functional programming has gained popularity in the development community. As an alternative to annotated controllers, Spring 5 introduced [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html), which allows you to define web routes using builder-style, fluent APIs. This approach has also been reintroduced in the classic WebMVC/Servlet stack, which we previously introduced in the *WebMvc + Functional Router* section.
 
 To get started, create a new project with the same settings as described in the *WebFlux + Annotated Controllers* section. Next, prepare the entity class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-fn/src/main/java/com/example/demo/DemoApplication.java#L211) and related [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-fn/src/main/java/com/example/demo/DemoApplication.java#L125-L210) as we did in the previous sections.
 
@@ -362,13 +362,13 @@ class PostHandler {
 }
 ```
 
-The `PostHandler` above is quite similar to its WebMvc counterpart. The key difference is that it uses Reactive Streams, with each `HandlerFunction` following the contract `ServerRequest req -> Mono<ServerResponse>`.
+The `PostHandler` above is quite similar to its WebMvc counterpart. The key difference is that it utilizes Reactive Streams, with each `HandlerFunction` adhering to the contract `ServerRequest req -> Mono<ServerResponse>`.
 
 Check out the [full example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webflux-fn) on GitHub for a complete walkthrough.
 
 ## WebFlux + Kotlin Coroutines + Annotated Controllers
 
-Kotlin Coroutines is a core Kotlin library that enables structured concurrency in a concise and efficient way. Coroutines simplify asynchronous code by letting you write it imperatively, using the `suspend` keyword to mark functions that can be paused and resumed without blocking threads. For handling streams of data asynchronously, coroutines provide the `Flow` API, which supports reactive-style operations.
+Kotlin Coroutines is a core Kotlin library that enables structured concurrency in a concise and efficient manner. Coroutines simplify asynchronous code by letting you write it imperatively, using the `suspend` keyword to mark functions that can be paused and resumed without blocking threads. For handling streams of data asynchronously, coroutines provide the `Flow` API, which supports reactive-style operations.
 
 Since Spring 5, Kotlin has been a first-class citizen in the Spring ecosystem. Building on top of its Reactive Streams support, Spring adds seamless integration with Kotlin Coroutines:
 * The coroutine context can interoperate with the Reactor context.
@@ -437,7 +437,7 @@ class PostController(private val posts: PostRepository) {
 }
 ```
 
-The controller is very similar to the WebMvc version. It replaces the Reactor `Mono/Flux` code with a simple `suspend` modifier on the functions.
+The controller is very similar to the WebMvc version. It erases the Reactor `Mono/Flux` return type with a simple `suspend` modifier on the functions.
 
 Grab the [full example code](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/) from GitHub and explore it yourself.
 
@@ -447,7 +447,7 @@ Based on the WebFlux [`RouterFunction`](https://docs.spring.io/spring-framework/
 
 Create a new project using the same settings as in the *WebFlux + Kotlin Coroutines + Annotated Controllers* section.
 
-Declare a bean in the Spring `@Configuration` class.
+Declare a bean with `coRouter{}` block in the Spring `@Configuration` class.
 
 ```kotlin
 @Configuration
@@ -515,19 +515,19 @@ class PostHandler(private val posts: PostRepository) {
 }
 ```
 
-The `xxxAwait` functions you see in the code above are actually extension methods on the Reactor/ReactiveStreams APIs. They let you turn reactive calls into `suspend` functions, making your code more readable and coroutine-friendly.
+The `xxxAwait` functions you see in the code above are extension methods on the Reactor/ReactiveStreams APIs. They turn reactive calls into `suspend` functions, making your code appear to be in an imperative style.
 
 Want to try it out for yourself? Grab a copy of the [working example](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco-fn) from GitHub and experiment with it.
 
 ## Bonus
 
-If you like the concise syntax offered by [CoRouterFunctionDsl](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html), you’ll be happy to know that Spring also provides Kotlin DSL extensions for [WebMvc RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webmvc/org.springframework.web.servlet.function/-router-function-dsl/index.html) and [WebFlux RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-router-function-dsl/index.html) to declare routes in a clean, idiomatic way. You can even define beans using [BeanDefinitionDsl](https://docs.spring.io/spring-framework/docs/6.2.8/kdoc-api/spring-context/org.springframework.context.support/-bean-definition-dsl/index.html), making your configuration more declarative.
+Suppose you like the concise syntax offered by [`CoRouterFunctionDsl`](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html). In that case, you'll be happy to know that Spring also provides Kotlin DSL extensions for [WebMvc `RouterFunction`](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webmvc/org.springframework.web.servlet.function/-router-function-dsl/index.html) and [WebFlux `RouterFunction`](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-router-function-dsl/index.html) to declare routes in a clean, idiomatic way. You can even define beans using [`BeanDefinitionDsl`](https://docs.spring.io/spring-framework/docs/6.2.8/kdoc-api/spring-context/org.springframework.context.support/-bean-definition-dsl/index.html), making your configuration more declarative.
 
-Curious to see WebMvc’s RouterFunctionDsl in action? Check out [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc) and explore the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc/src/main/kotlin/com/example/demo/DemoApplication.kt#L154-L175).
+Curious to see WebMvc's `RouterFunctionDsl` in action? Check out [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc) and explore the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc/src/main/kotlin/com/example/demo/DemoApplication.kt#L154-L175).
 
-Want to dive into the WebFlux RouterFunctionDsl? Have a look at [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux) and review the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux/src/main/kotlin/com/example/demo/DemoApplication.kt#L119-L142).
+Want to dive into the WebFlux `RouterFunctionDsl`? Have a look at [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux) and review the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux/src/main/kotlin/com/example/demo/DemoApplication.kt#L119-L142).
 
-There’s also an experimental Spring project called [Spring Fu](https://github.com/spring-projects-experimental/spring-fu) that aims to bring a complete DSL approach to building Spring applications. Although development is currently paused, it’s still an interesting project to check out if you’re curious about functional programming and DSL support in Spring.
+There's also an experimental Spring project called [Spring Fu](https://github.com/spring-projects-experimental/spring-fu) that aims to bring a complete DSL approach to building Spring applications. Although development is currently paused, it's still an interesting project to check out if you're curious about functional programming and DSL support in Spring.
 
 ---
 
@@ -536,10 +536,10 @@ There’s also an experimental Spring project called [Spring Fu](https://github.
 We discussed six key programming models for building RESTful services:
 
 1. **WebMvc + Annotated Controllers**: The classic, annotation-driven approach.
-2. **WebMvc + Functional Router**: Declarative, functional route definitions on the servlet stack.
+2. **WebMvc + Functional Router**: Declarative, functional route definitions with WebMvc `RouterFunction`.
 3. **WebFlux + Annotated Controllers**: Reactive REST APIs using familiar annotations.
-4. **WebFlux + Functional Router**: Reactive, functional routing with Reactor.
-5. **WebFlux + Kotlin Coroutines + Annotated Controllers**: Imperative, coroutine-based REST APIs in Kotlin.
+4. **WebFlux + Functional Router**: Reactive, functional routing with WebFlux `RouterFunction`.
+5. **WebFlux + Kotlin Coroutines + Annotated Controllers**: Coroutine-friendly, imperative, annotation-driven REST APIs in Kotlin.
 6. **WebFlux + Kotlin Coroutines + Functional Router**: Coroutine-friendly, functional routing with Kotlin DSL.
 
-Each model has its trade-offs. Choose the one that best fits your team's skills and your application's requirements.
+Each model has its trade-offs. You can choose the one that best fits your team's skills and your application's requirements.
