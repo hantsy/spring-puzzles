@@ -48,7 +48,8 @@ This post will focus on building RESTful services using various Spring technolog
 This is the classic approach that has been part of Spring for years. Let's start by generating a project at [start.spring.io](https://start.spring.io):
 
 * Project: **Maven**
-* Java: **21** 
+* Language: **Java**
+* Project Metadata: Java **21** 
 * Spring Boot: **3.5**
 * Dependencies: *Web*, *Data JDBC*, *PostgreSQL*, *Testcontainers*, *Lombok*, etc.
 
@@ -126,7 +127,7 @@ The [complete example project](https://github.com/hantsy/spring-puzzles/tree/mas
 
 Let’s see how you can use a [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/function/RouterFunction.html) bean to replace the `PostController` we built earlier.
 
-Start by creating a new project, using the same settings as described in [WebMvc + Annotated Controllers](#WebMvc + Annotated Controllers). However, this time, instead of the declarative `Repository` interface, we reimplement the CRUD operations in [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L122-L202) using the new [JdbcClient introduced in Spring 6](https://hantsy.medium.com/an-introduction-to-spring-jdbcclient-api-20e833d7b0f3).
+Start by creating a new project, using the same settings as described in [WebMvc + Annotated Controllers](#webmvc--annotated-controllers). However, this time, instead of the declarative `Repository` interface, we reimplement the CRUD operations in [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc-fn/src/main/java/com/example/demo/DemoApplication.java#L122-L202) using the new [JdbcClient introduced in Spring 6](https://hantsy.medium.com/an-introduction-to-spring-jdbcclient-api-20e833d7b0f3).
 
 Next, declare a `RouterFunction` bean inside a Spring `@Configuration` class as shown below:
 
@@ -206,6 +207,81 @@ class PostHandler {
 }
 ```
 
-This class is a straightforward Spring `@Component`, with each method serving as an implementation of `HandlerFunction`. The logic for handling each HTTP request type—listing, fetching, creating, updating, and deleting posts—is cleanly separated into methods, making the code easy to follow and maintain.
+This class is a straightforward Spring `@Component`, with each method serving as an implementation of `HandlerFunction`. The logic for handling each HTTP request type—listing, fetching, creating, updating, and deleting posts—is cleanly separated into methods.
+
+The [complete example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webmvc-fn) is available on GitHub.
 
 ---
+
+## WebFlux + Annotated Controllers
+
+Spring 5 introduced support for the [Reactive Streams](https://www.reactive-streams.org/) specification, completely overhauling web request handling in the Spring WebFlux module using [Reactor](https://projectreactor.io). With WebFlux, you can leverage the familiar annotations from the classic WebMvc module to build RESTful services on top of the new Reactor APIs.
+
+> [!Note]
+> Reactor is a [Reactive Streams for JVM](https://github.com/reactive-streams/reactive-streams-jvm/) implementation. If you’re new to Reactor, check out InfoQ’s [Reactor by Example](https://www.infoq.com/articles/reactor-by-example/) for a solid introduction.
+
+To get started, create a new project at [start.spring.io](https://start.spring.io) with the following settings:
+- Project: **Maven**
+- Language: **Java**
+- Project Metadata: Java **21**
+- Spring Boot: **3.5**
+- Dependencies: *Reactive Web*, *Data R2dbc*, *PostgreSQL*, *Testcontainers*, *Lombok*, etc.
+
+Choose the *Reactive Web* dependency to set up a WebFlux application, and add *Data R2dbc* for reactive database access via the R2dbc driver for PostgreSQL. 
+
+Next, define your table-mapped entity class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux/src/main/java/com/example/demo/DemoApplication.java#L104-L119), and create a corresponding [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux/src/main/java/com/example/demo/DemoApplication.java#L97-L99) that extends [`R2dbcRepository`](https://docs.spring.io/spring-data/r2dbc/docs/current/api/org/springframework/data/r2dbc/repository/R2dbcRepository.html).
+
+With these in place, you can move on to creating your `PostController` bean.
+
+```java
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/posts")
+class PostController {
+
+    private final PostRepository posts;
+
+    @GetMapping("")
+    public ResponseEntity<Flux<Post>> all() {
+        return ok(this.posts.findAll());
+    }
+
+    @GetMapping("{id}")
+    public Mono<ResponseEntity<Post>> get(@PathVariable("id") Long id) {
+        return this.posts.findById(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(notFound().build());
+    }
+
+    @PostMapping("")
+    public Mono<ResponseEntity<?>> create(@RequestBody Post post) {
+        return this.posts.save(post)
+                .map(p -> created(URI.create("/posts/" + p.id())).build());
+    }
+
+    @PutMapping("{id}")
+    public Mono<ResponseEntity<Object>> update(@PathVariable Long id, @RequestBody Post data) {
+        return this.posts.findById(id)
+                .flatMap(p -> {
+                    var updated = new Post(p.id(), data.title(), data.content(), p.createdAt());
+                    return this.posts.save(updated)
+                            .then(Mono.fromCallable(() -> noContent().build()));
+                })
+                .defaultIfEmpty(notFound().build());
+    }
+
+    @DeleteMapping("{id}")
+    public Mono<ResponseEntity<?>> deleteById(@PathVariable Long id) {
+        return this.posts.existsById(id)
+                .flatMap(b -> {
+                    if (b) return this.posts.deleteById(id)
+                            .then(Mono.fromCallable(() -> noContent().build()));
+                    else return Mono.just(notFound().build());
+                });
+    }
+}
+```
+The controller above closely mirrors a traditional WebMvc controller, but utilizes Reactor’s APIs to enable fully non-blocking, reactive data processing. Instead of returning `ResponseEntity<List<BodyType>>` or `ResponseEntity<BodyType>` as in classic controllers, this WebFlux controller returns `ResponseEntity<Flux<BodyType>>` for streaming multiple results, and `Mono<ResponseEntity<BodyType>>` for single-result or empty responses. 
+
+The [complete example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webflux) is available on GitHub.
+
