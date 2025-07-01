@@ -285,3 +285,92 @@ The controller above closely mirrors a traditional WebMvc controller, but utiliz
 
 The [complete example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webflux) is available on GitHub.
 
+## WebFlux + Functional Router
+
+Functional programming has gained significant traction in the development community. As an alternative to annotated controllers, Spring 5 introduced [`RouterFunction`](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html), which allows you to define web routes using builder-style, fluent APIs. This approach has also been brought back to the classic WebMVC/Servlet stack, which we have already introduced in the *WebMvc + Functional Router* section.
+
+To get started, you can just create a new project with the same settings as described in the *WebFlux + Annotated Controllers* section. Next, prepare the entity class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-fn/src/main/java/com/example/demo/DemoApplication.java#L211) and related [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-fn/src/main/java/com/example/demo/DemoApplication.java#L125-L210) as we did in the previous sections.
+
+Finally, define a `RouterFunction<ServerResponse>` bean within a Spring `@Configuration` class to set up your routing logic.
+
+```java
+@Configuration
+class WebConfig {
+
+    @Bean
+    public RouterFunction<ServerResponse> routes(PostHandler postsHandler) {
+        var collectionRoutes = route(method(GET), postsHandler::findAll)
+                .andRoute(method(POST), postsHandler::create);
+        var singleRoutes = route(method(GET), postsHandler::findById)
+                .andRoute(method(PUT), postsHandler::update)
+                .andRoute(method(DELETE), postsHandler::deleteById);
+
+        return route()
+                .path("posts",
+                        () -> nest(path("{id}"), singleRoutes)
+                                .andNest(path(""), collectionRoutes)
+                )
+                .build();
+    }
+}
+
+```
+
+The bean definition looks very similar to the one we just created for classic WebMvc.  Be sure you’re importing everything from `org.springframework.web.reactive.function.server`.
+
+Here’s what the related [`PostHandler`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-fn/src/main/java/com/example/demo/DemoApplication.java#L85-L123) looks like.
+
+```java
+@Component
+@RequiredArgsConstructor
+class PostHandler {
+
+    private final PostRepository posts;
+
+    public Mono<ServerResponse> findAll(ServerRequest req) {
+        return ok().body(this.posts.findAll(), Post.class);
+    }
+
+    public Mono<ServerResponse> create(ServerRequest req) {
+        return req.bodyToMono(Post.class)
+                .flatMap(this.posts::create)
+                .flatMap(postId -> created(URI.create("/posts/" + postId)).build());
+    }
+
+    public Mono<ServerResponse> findById(ServerRequest req) {
+        return this.posts.findById(Long.valueOf(req.pathVariable("id")))
+                .flatMap(post -> ok().body(Mono.just(post), Post.class))
+                .switchIfEmpty(notFound().build());
+    }
+
+    public Mono<ServerResponse> update(ServerRequest req) {
+        return req.bodyToMono(Post.class)
+                .flatMap(p -> this.posts.update(Long.valueOf(req.pathVariable("id")), p))
+                .flatMap(d -> {
+                    if (d > 0) return noContent().build();
+                    else return notFound().build();
+                });
+    }
+
+    public Mono<ServerResponse> deleteById(ServerRequest req) {
+        return this.posts.deleteById(Long.valueOf(req.pathVariable("id")))
+                .flatMap(d -> {
+                    if (d > 0) return noContent().build();
+                    else return notFound().build();
+                });
+    }
+}
+```
+
+The `PostHandler` above is quite similar to its WebMvc counterpart. The key difference is that it embraces Reactive Streams, with each `HandlerFunction` following the contract `ServerRequest req -> Mono<ServerResponse>`. 
+
+Check out the [full example project](https://github.com/hantsy/spring-puzzles/tree/master/programming-models/webflux-fn) on GitHub for a complete walkthrough.
+
+## WebFlux + Kotlin Coroutines + Annotated Controllers
+
+
+
+
+
+
+
