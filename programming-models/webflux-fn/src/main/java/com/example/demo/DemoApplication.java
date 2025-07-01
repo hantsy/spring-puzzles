@@ -208,20 +208,7 @@ class PostRepository {
     }
 }
 
-@Table(value = "posts")
-record Post(
-        @Id
-        @Column("id")
-        Long id,
-
-        @Column("title")
-        String title,
-
-        @Column("content")
-        String content,
-
-        @Column("created_at")
-        LocalDateTime createdAt
-) {
+record Post(Long id, String title, String content, LocalDateTime createdAt){
+    
 }
 
