@@ -12,7 +12,7 @@ Spring has even backported **RouterFunction** and the **Kotlin DSL** to the trad
 
 As a developer building RESTful services with Spring Boot, you now have several powerful programming models to choose from, such as WebMvc or WebFlux for the tech stack, and annotated controllers or functional routers for code style.
 
-In this article, we will explore **six essential programming models** that every Spring Boot developer should know when building RESTful services.
+In this post, we will explore **six essential programming models** that every Spring Boot developer should know when building RESTful services.
 
 ---
 
@@ -29,7 +29,8 @@ As usual, we’ll use a blog example project to demonstrate each feature.
 
 For our database, we’ll use PostgreSQL. A [Docker Compose](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/docker-compose.yml) file is provided to start the database service during development. When running tests, we’ll use Testcontainers to manage the database. Both approaches use the same scripts to initialize the database, including schema and seed data. You can find these scripts in [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql).
 
-The REST API for managing `POST` entities will support the following operations:
+Following Level 2 of the Richardson Maturity Model, we are designing RESTful APIs for managing POST entities that support the following operations:
+
 
 | URI             | REQUEST                                         | RESPONSE                                                                |
 |-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
@@ -39,7 +40,10 @@ The REST API for managing `POST` entities will support the following operations:
 | PUT /posts/{id} | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 204                                                             |
 | DELETE /posts/{id} |                                               | status: 204                                                             |
 
-This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll demonstrate how each model can be utilized to build the same RESTful API, allowing you to select the approach that best suits your project.
+> [!NOTE]
+> For more details on the Richardson Maturity Model, see [Martin Fowler’s article](https://martinfowler.com/articles/richardsonMaturityModel.html).
+
+This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll demonstrate how each model can be utilized to build the same RESTful API, allowing you to compare and select the approach that best suits your project.
 
 ---
 
