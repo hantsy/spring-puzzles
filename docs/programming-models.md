@@ -12,7 +12,7 @@ Spring has even backported **RouterFunction** and the **Kotlin DSL** to the trad
 
 As a developer building RESTful services with Spring Boot, you now have several powerful programming models to choose from, such as WebMvc or WebFlux for the tech stack, and annotated controllers or functional routers for code style.
 
-In this article, we will explore **six essential programming models** that every Spring Boot developer should know when building RESTful services.
+In this post, we will explore **six essential programming models** that every Spring Boot developer should know when building RESTful services.
 
 ---
 
@@ -31,8 +31,6 @@ For our database, we’ll use PostgreSQL. A [Docker Compose](https://github.com/
 
 Following Level 2 of the Richardson Maturity Model, we are designing RESTful APIs for managing POST entities, supporting the following operations:
 
-> [!NOTE]
-> For more details on the Richardson Maturity Model, see [Martin Fowler’s article](https://martinfowler.com/articles/richardsonMaturityModel.html).
 
 | URI             | REQUEST                                         | RESPONSE                                                                |
 |-----------------|-------------------------------------------------|-------------------------------------------------------------------------|
@@ -42,7 +40,10 @@ Following Level 2 of the Richardson Maturity Model, we are designing RESTful API
 | PUT /posts/{id} | content-type: application/json<br>{"title":"new title", "content":"new content"} | status: 204                                                             |
 | DELETE /posts/{id} |                                               | status: 204                                                             |
 
-This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll demonstrate how each model can be utilized to build the same RESTful API, allowing you to select the approach that best suits your project.
+> [!NOTE]
+> For more details on the Richardson Maturity Model, see [Martin Fowler’s article](https://martinfowler.com/articles/richardsonMaturityModel.html).
+
+This post will focus on building RESTful services using different Spring technologies, including WebMvc and WebFlux, and using both annotated controllers and functional routers. We'll demonstrate how each model can be utilized to build the same RESTful API, allowing you to compare and select the approach that best suits your project.
 
 ---
 
