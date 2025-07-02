@@ -387,9 +387,9 @@ To get started, create a new project at [start.spring.io](https://start.spring.i
 
 Here, we choose **Kotlin** as the programming language. Due to its concise syntax, we also remove **Lombok** from the dependencies.
 
-Create a data class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L86C1-L92C2) to represent the table-mapped entity, and a related [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L84), which extends a coroutine-aware [`CoroutineCrudRepository`](https://docs.spring.io/spring-data/jpa/reference/data-commons/kotlin/coroutines.html).
+Create a data class [`Post`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L86C1-L92C2) to represent the table-mapped entity, and a related [`PostRepository`](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/src/main/kotlin/com/example/demo/DemoApplication.kt#L84), which extends a coroutine-aware [`CoroutineCrudRepository`](https://docs.spring.io/spring-data/jpa/reference/data-commons/kotlin/coroutines.html) interface.
 
-Then let's move on to the [`PostController`] class.
+Then let's move on to the `PostController` class.
 
 ```kotlin
 @RestController
