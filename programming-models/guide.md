@@ -437,7 +437,7 @@ class PostController(private val posts: PostRepository) {
 }
 ```
 
-The controller is very similar to the WebMvc version. It erases the Reactor `Mono/Flux` return type with a simple `suspend` modifier on the functions.
+The controller is very similar to the WebMvc version. The main difference is that here we use a simple `suspend` modifier on the functions.
 
 Grab the [full example code](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco/) from GitHub and explore it yourself.
 
@@ -517,7 +517,7 @@ class PostHandler(private val posts: PostRepository) {
 }
 ```
 
-The `xxxAwait` functions you see in the code above are actually extension methods on the Reactor/ReactiveStreams APIs. They let you turn reactive calls into coroutines-aware `suspend` functions in impreative coding style.
+The `xxxAwait` functions you see in the code above are extension methods on the Reactor/ReactiveStreams APIs. They allow you to transform reactive calls into coroutines-aware `suspend` functions in an imperative coding style.
 
 Grab a copy of the [working example](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco-fn) from GitHub and experiment with it.
 
