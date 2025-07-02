@@ -468,6 +468,8 @@ class WebConfig {
 }
 ```
 
+The `coRouter {}` Kotlin DSL block takes full advantage of Kotlin’s expressive syntax, including lambdas and extension functions, to provide a highly readable and concise way to define routes. Compared to the more verbose Java builder-style APIs, this DSL allows you to configure route, nested routes, and handler functions in a clear declarative style. 
+
 The related `PostHandler` looks like this.
 
 ```kotlin
@@ -515,15 +517,15 @@ class PostHandler(private val posts: PostRepository) {
 }
 ```
 
-The `xxxAwait` functions you see in the code above are actually extension methods on the Reactor/ReactiveStreams APIs. They let you turn reactive calls into `suspend` functions, making your code more readable and coroutine-friendly.
+The `xxxAwait` functions you see in the code above are actually extension methods on the Reactor/ReactiveStreams APIs. They let you turn reactive calls into coroutines-aware `suspend` functions in impreative coding style.
 
-Want to try it out for yourself? Grab a copy of the [working example](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco-fn) from GitHub and experiment with it.
+Grab a copy of the [working example](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webflux-ktco-fn) from GitHub and experiment with it.
 
 ## Bonus
 
 If you like the concise syntax offered by [CoRouterFunctionDsl](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-co-router-function-dsl/index.html), you’ll be happy to know that Spring also provides Kotlin DSL extensions for [WebMvc RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webmvc/org.springframework.web.servlet.function/-router-function-dsl/index.html) and [WebFlux RouterFunction](https://docs.spring.io/spring-framework/docs/current/kdoc-api/spring-webflux/org.springframework.web.reactive.function.server/-router-function-dsl/index.html) to declare routes in a clean, idiomatic way. You can even define beans using [BeanDefinitionDsl](https://docs.spring.io/spring-framework/docs/6.2.8/kdoc-api/spring-context/org.springframework.context.support/-bean-definition-dsl/index.html), making your configuration more declarative.
 
-Curious to see WebMvc’s RouterFunctionDsl in action? Check out [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc) and explore the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc/src/main/kotlin/com/example/demo/DemoApplication.kt#L154-L175).
+To see WebMvc’s RouterFunctionDsl in action, review [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc) and explore the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webmvc/src/main/kotlin/com/example/demo/DemoApplication.kt#L154-L175).
 
 Want to dive into the WebFlux RouterFunctionDsl? Have a look at [this example project](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux) and review the [sample code](https://github.com/hantsy/spring-kotlin-dsl-sample/blob/master/webflux/src/main/kotlin/com/example/demo/DemoApplication.kt#L119-L142).
 
