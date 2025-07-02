@@ -29,7 +29,7 @@ As usual, we’ll use a blog example project to demonstrate each feature.
 
 For our database, we’ll use PostgreSQL. A [Docker Compose](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/docker-compose.yml) file is provided to start the database service during development. When running tests, we’ll use Testcontainers to manage the database. Both approaches use the same scripts to initialize the database, including schema and seed data. You can find these scripts in [schema.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/schema.sql) and [data.sql](https://github.com/hantsy/spring-puzzles/blob/master/programming-models/webmvc/src/main/resources/data.sql).
 
-Following Level 2 of the Richardson Maturity Model, we are designing RESTful APIs for managing POST entities, supporting the following operations:
+Following Level 2 of the Richardson Maturity Model, we are designing RESTful APIs for managing POST entities that support the following operations:
 
 
 | URI             | REQUEST                                         | RESPONSE                                                                |
