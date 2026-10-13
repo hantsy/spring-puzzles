@@ -6,13 +6,13 @@ services:
 
   # https://hub.docker.com/r/bitnami/kafka/
   zookeeper:
-    image: 'bitnami/zookeeper:latest'
+    image: 'soldevelo/zookeeper:latest'
     ports:
       - '2181:2181'
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
-    image: 'bitnami/kafka:latest'
+    image: 'soldevelo/kafka:latest'
     ports:
       - '9092:9092'
     environment:
